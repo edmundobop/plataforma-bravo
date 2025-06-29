@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/models/user.dart';
 
+import 'package:go_router/go_router.dart';
+
 class UserManagementScreen extends ConsumerStatefulWidget {
   const UserManagementScreen({super.key});
 
@@ -20,6 +22,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.go('/'),
+        ),
         title: const Text('Gerenciar Usuários'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,

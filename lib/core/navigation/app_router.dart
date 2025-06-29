@@ -8,6 +8,10 @@ import '../../app/inspections/views/inspections_screen.dart';
 import '../../app/stock/views/stock_dashboard_screen.dart';
 import '../../app/fleet/views/fleet_screen.dart';
 import '../../app/trade_services/views/trade_services_screen.dart';
+import '../../app/stock/consumables/views/product_registration_screen.dart';
+import '../../app/stock/consumables/views/product_list_screen.dart';
+import '../../app/stock/consumables/views/stock_movement_screen.dart';
+import '../../core/models/product.dart';
 import '../providers/auth_providers.dart';
 
 // Provider do router
@@ -48,6 +52,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/stock',
         builder: (context, state) => const StockDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'product-registration',
+            builder: (context, state) {
+              final product = state.extra as Product?;
+              return ProductRegistrationScreen(product: product);
+            },
+          ),
+          GoRoute(
+            path: 'products',
+            builder: (context, state) => const ProductListScreen(),
+          ),
+          GoRoute(
+            path: 'movement',
+            builder: (context, state) => const StockMovementScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/fleet',

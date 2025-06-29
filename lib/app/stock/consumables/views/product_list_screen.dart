@@ -119,11 +119,18 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.push('/stock/product-registration');
+      floatingActionButton: Consumer(
+        builder: (context, ref, child) {
+          final isAdmin = ref.watch(isAdminProvider);
+          return isAdmin
+              ? FloatingActionButton(
+                  onPressed: () {
+                    context.push('/stock/product-registration');
+                  },
+                  child: const Icon(Icons.add),
+                )
+              : const SizedBox.shrink();
         },
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -176,43 +183,50 @@ class _ProductCard extends ConsumerWidget {
             ),
           ],
         ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) async {
-            switch (value) {
-              case 'details':
-                _showProductDetails(context, product);
-                break;
-              case 'edit':
-                context.push('/stock/product-registration', extra: product);
-                break;
-              case 'delete':
-                _deleteProduct(context, ref, product);
-                break;
-            }
+        trailing: Consumer(
+          builder: (context, ref, child) {
+            final isAdmin = ref.watch(isAdminProvider);
+            return PopupMenuButton<String>(
+              onSelected: (value) async {
+                switch (value) {
+                  case 'details':
+                    _showProductDetails(context, product);
+                    break;
+                  case 'edit':
+                    context.push('/stock/product-registration', extra: product);
+                    break;
+                  case 'delete':
+                    _deleteProduct(context, ref, product);
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'details',
+                  child: ListTile(
+                    leading: Icon(Icons.info),
+                    title: Text('Detalhes'),
+                  ),
+                ),
+                if (isAdmin)
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: ListTile(
+                      leading: Icon(Icons.edit),
+                      title: Text('Editar'),
+                    ),
+                  ),
+                if (isAdmin)
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: ListTile(
+                      leading: Icon(Icons.delete, color: Colors.red),
+                      title: Text('Excluir', style: TextStyle(color: Colors.red)),
+                    ),
+                  ),
+              ],
+            );
           },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'details',
-              child: ListTile(
-                leading: Icon(Icons.info),
-                title: Text('Detalhes'),
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'edit',
-              child: ListTile(
-                leading: Icon(Icons.edit),
-                title: Text('Editar'),
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: ListTile(
-                leading: Icon(Icons.delete, color: Colors.red),
-                title: Text('Excluir', style: TextStyle(color: Colors.red)),
-              ),
-            ),
-          ],
         ),
       ),
     );

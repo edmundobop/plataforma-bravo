@@ -25,14 +25,7 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
   String? _selectedCategory;
   String? _selectedUnit;
 
-  final List<String> _categories = [
-    'APH',
-    'Alimentício',
-    'Limpeza',
-    'Escritório',
-    'Manutenção',
-    'Outros',
-  ];
+  
 
   final List<String> _units = [
     'Unidade',
@@ -56,13 +49,17 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
 
   void _populateFields() {
     final product = widget.product!;
+    final categories = ref.read(categoriesProvider);
     _nameController.text = product.name;
     _descriptionController.text = product.description;
     _minStockController.text = product.minStock.toString();
     _maxStockController.text = product.maxStock.toString();
     _currentStockController.text = product.currentStock.toString();
     _locationController.text = product.location;
-    _selectedCategory = product.category;
+    _selectedCategory = categories.firstWhere(
+      (cat) => cat.toLowerCase() == product.category.toLowerCase(),
+      orElse: () => product.category, // Fallback if not found
+    );
     _selectedUnit = product.unit;
   }
 
@@ -153,11 +150,17 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.product != null;
+    final categories = ref.watch(categoriesProvider);
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
         title: Text(isEditing ? 'Editar Produto' : 'Cadastrar Produto'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.blue.shade700,
+        foregroundColor: Colors.white,
       ),
       body: Form(
         key: _formKey,
@@ -212,7 +215,7 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                                 labelText: 'Categoria *',
                                 border: OutlineInputBorder(),
                               ),
-                              items: _categories.map((category) {
+                              items: categories.map((category) {
                                 return DropdownMenuItem(
                                   value: category,
                                   child: Text(category),
@@ -398,16 +401,22 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _submitProduct,
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(isEditing ? 'Atualizar' : 'Cadastrar'),
+                  Visibility(
+                    visible: ref.watch(isAdminProvider),
+                    maintainSize: false,
+                    maintainAnimation: false,
+                    maintainState: false,
+                    child: Expanded(
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submitProduct,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(isEditing ? 'Atualizar' : 'Cadastrar'),
+                      ),
                     ),
                   ),
                 ],

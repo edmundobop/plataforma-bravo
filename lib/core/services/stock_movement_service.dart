@@ -10,37 +10,78 @@ class StockMovementService {
     try {
       // Iniciar transação para garantir consistência
       await _firestore.runTransaction((transaction) async {
+        final productRef = _firestore.collection('products').doc(movement.productId);
+        final productDoc = await transaction.get(productRef);
+
+        if (!productDoc.exists) {
+          throw Exception('Produto não encontrado');
+        }
+
+        final currentStock = productDoc.data()!['currentStock'] as num;
+        num newStock;
+
+        if (movement.type == MovementType.entry) {
+          newStock = currentStock + movement.quantity;
+        } else {
+          newStock = currentStock - movement.quantity;
+          if (newStock < 0) {
+            throw Exception('Estoque insuficiente para esta operação');
+          }
+        }
+
+        // Atualizar o estoque do produto
+        transaction.update(productRef, {
+          'currentStock': newStock.toInt(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
         // Adicionar a movimentação
         final movementRef = _firestore.collection(_collection).doc();
         transaction.set(movementRef, movement.toFirestore());
-
-        // Atualizar o estoque do produto
-        final productRef = _firestore.collection('products').doc(movement.productId);
-        final productDoc = await transaction.get(productRef);
-        
-        if (productDoc.exists) {
-          final currentStock = productDoc.data()!['currentStock'] as int;
-          int newStock;
-          
-          if (movement.type == MovementType.entry) {
-            newStock = currentStock + movement.quantity;
-          } else {
-            newStock = currentStock - movement.quantity;
-            if (newStock < 0) {
-              throw Exception('Estoque insuficiente para esta operação');
-            }
-          }
-          
-          transaction.update(productRef, {
-            'currentStock': newStock,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        } else {
-          throw Exception('Produto não encontrado');
-        }
       });
     } catch (e) {
       throw Exception('Erro ao criar movimentação: $e');
+    }
+  }
+
+  // Criar movimentações em lote
+  Future<void> createMovementsInBatch(List<StockMovement> movements) async {
+    try {
+      final batch = _firestore.batch();
+
+      for (final movement in movements) {
+        final productRef = _firestore.collection('products').doc(movement.productId);
+        final productDoc = await productRef.get();
+
+        if (!productDoc.exists) {
+          throw Exception('Produto não encontrado: ${movement.productName}');
+        }
+
+        final currentStock = productDoc.data()!['currentStock'] as num;
+        num newStock;
+
+        if (movement.type == MovementType.entry) {
+          newStock = currentStock + movement.quantity;
+        } else {
+          newStock = currentStock - movement.quantity;
+          if (newStock < 0) {
+            throw Exception(
+                'Estoque insuficiente para ${movement.productName}');
+          }
+        }
+
+        batch.update(productRef, {
+          'currentStock': newStock.toInt(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        final movementRef = _firestore.collection(_collection).doc();
+        batch.set(movementRef, movement.toFirestore());
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Erro ao criar movimentações em lote: $e');
     }
   }
 
@@ -123,8 +164,8 @@ class StockMovementService {
         final productDoc = await transaction.get(productRef);
         
         if (productDoc.exists) {
-          final currentStock = productDoc.data()!['currentStock'] as int;
-          int newStock;
+          final currentStock = productDoc.data()!['currentStock'] as num;
+          num newStock;
           
           // Reverter a operação
           if (movement.type == MovementType.entry) {
@@ -137,7 +178,7 @@ class StockMovementService {
           }
           
           transaction.update(productRef, {
-            'currentStock': newStock,
+            'currentStock': newStock.toInt(),
             'updatedAt': FieldValue.serverTimestamp(),
           });
         }

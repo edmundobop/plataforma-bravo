@@ -26,7 +26,8 @@ class _StockDashboardScreenState extends ConsumerState<StockDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gestão de Almoxarifado'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.blue.shade700,
+        foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
@@ -84,7 +85,8 @@ class _DashboardOverview extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard de Estoque'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.blue.shade700,
+        foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
@@ -161,14 +163,21 @@ class _DashboardOverview extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: _QuickActionCard(
-                    title: 'Cadastrar Produto',
-                    subtitle: 'Adicionar novo produto',
-                    icon: Icons.add_box,
-                    color: Colors.green,
-                    onTap: () => context.push('/stock/product-registration'),
-                  ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final isAdmin = ref.watch(isAdminProvider);
+                    return isAdmin
+                        ? Expanded(
+                            child: _QuickActionCard(
+                              title: 'Cadastrar Produto',
+                              subtitle: 'Adicionar novo produto',
+                              icon: Icons.add_box,
+                              color: Colors.green,
+                              onTap: () => context.push('/stock/product-registration'),
+                            ),
+                          )
+                        : const SizedBox.shrink();
+                  },
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -420,7 +429,8 @@ class _ConsumablesSection extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Consumíveis'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.blue.shade700,
+        foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
       body: Padding(
@@ -487,12 +497,19 @@ class _ConsumablesSection extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.push('/stock/product-registration'),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Cadastrar Produto'),
-                  ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final isAdmin = ref.watch(isAdminProvider);
+                    return isAdmin
+                        ? Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => context.push('/stock/product-registration'),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Cadastrar Produto'),
+                            ),
+                          )
+                        : const SizedBox.shrink();
+                  },
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -561,7 +578,8 @@ class _EquipmentSection extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Equipamentos'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.blue.shade700,
+        foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
       body: const Center(
@@ -594,7 +612,8 @@ class _CautelasSection extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cautelas'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.blue.shade700,
+        foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
       body: const Center(

@@ -97,11 +97,12 @@ final categoryFilterProvider = StateProvider<String>((ref) => 'Todas');
 final categoriesProvider = Provider<List<String>>((ref) {
   return [
     'Todas',
-    'Material de Escritório',
-    'Suprimentos de TI',
-    'Material de Limpeza',
-    'Equipamentos',
-    'Outros'
+    'APH',
+    'Alimentício',
+    'Limpeza',
+    'Escritório',
+    'Manutenção',
+    'Outros',
   ];
 });
 
@@ -115,7 +116,7 @@ final filteredProductsProvider = StreamProvider<List<Product>>((ref) {
     var filtered = products;
     
     // Filtrar por categoria
-    if (categoryFilter != 'Todas') {
+    if (categoryFilter.isNotEmpty && categoryFilter != 'Todas') {
       filtered = filtered.where((product) => product.category == categoryFilter).toList();
     }
     

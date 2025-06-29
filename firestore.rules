@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to all users
+    match /{document=**} {
+      allow read: if request.auth != null;
+    }
+
+    // Products collection rules
+    match /products/{productId} {
+      // Only admins can create, update, or delete products
+      allow create, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Stock movements collection rules
+    match /stock_movements/{movementId} {
+      // All authenticated users can create stock movements
+      allow create: if request.auth != null;
+
+      // Non-admin users can only create 'exit' movements
+      allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'admin' && request.resource.data.type == 'exit';
+
+      // Admins can create any type of movement
+      allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+
+      // No one can update or delete stock movements (for audit trail)
+      allow update, delete: if false;
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Admins can read all user data
+      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Admins can create, update, and delete user data
+      allow create, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}
