@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:gestaocbmgo/app/home/widgets/welcome_widget.dart';
 import '../../../core/providers/auth_providers.dart';
+import '../../../features/checklist_viaturas/utils/app_colors.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -13,101 +13,240 @@ class HomeScreen extends ConsumerWidget {
     final isAdmin = ref.watch(isAdminProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gestão CBMGO'),
-        centerTitle: true,
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        actions: [
-          // Menu do usuário
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.account_circle),
-            onSelected: (value) => _handleMenuAction(context, ref, value),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'profile',
-                child: Row(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primaryRed,
+              AppColors.darkRed,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Cabeçalho CBM-GO
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   children: [
-                    const Icon(Icons.person, size: 20),
-                    const SizedBox(width: 8),
-                    Text(currentUser.value?.name ?? 'Perfil'),
+                    // Título principal
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.local_fire_department,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Plataforma Bravo',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Gestão CBM-GO',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Menu do usuário
+                        PopupMenuButton<String>(
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.account_circle,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          onSelected: (value) => _handleMenuAction(context, ref, value),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'profile',
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.person, size: 20, color: AppColors.primaryRed),
+                                  const SizedBox(width: 8),
+                                  Text(currentUser.value?.name ?? 'Perfil'),
+                                ],
+                              ),
+                            ),
+                            if (isAdmin) ...[
+                              const PopupMenuItem(
+                                value: 'users',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.people, size: 20, color: AppColors.primaryRed),
+                                    SizedBox(width: 8),
+                                    Text('Gerenciar Usuários'),
+                                  ],
+                                ),
+                              ),
+                              const PopupMenuDivider(),
+                            ],
+                            const PopupMenuItem(
+                              value: 'logout',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.logout, size: 20, color: AppColors.primaryRed),
+                                  SizedBox(width: 8),
+                                  Text('Sair', style: TextStyle(color: AppColors.primaryRed)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // Informações do usuário
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              currentUser.value?.name ?? 'Usuário',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              currentUser.value?.role.displayName ?? 'Função',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              if (isAdmin) ...[
-                const PopupMenuItem(
-                  value: 'users',
-                  child: Row(
-                    children: [
-                      Icon(Icons.people, size: 20),
-                      SizedBox(width: 8),
-                      Text('Gerenciar Usuários'),
-                    ],
+              // Conteúdo principal
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
                   ),
-                ),
-                const PopupMenuDivider(),
-              ],
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, size: 20, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Sair', style: TextStyle(color: Colors.red)),
-                  ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Módulos do Sistema',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.darkRed,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Expanded(
+                          child: GridView.count(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 1.1,
+                            children: <Widget>[
+                              _buildModernMenuCard(
+                                context,
+                                icon: Icons.assignment_turned_in,
+                                title: 'Gestão de\nVistorias',
+                                subtitle: 'Inspeções e relatórios',
+                                color: AppColors.primaryRed,
+                                onTap: () => context.go('/inspections'),
+                              ),
+                              _buildModernMenuCard(
+                                context,
+                                icon: Icons.inventory_2,
+                                title: 'Gestão de\nAlmoxarifado',
+                                subtitle: 'Controle de estoque',
+                                color: const Color(0xFF2E7D32),
+                                onTap: () => context.go('/stock'),
+                              ),
+                              _buildModernMenuCard(
+                                context,
+                                icon: Icons.directions_car,
+                                title: 'Checklist de\nViaturas',
+                                subtitle: 'Inspeção de veículos',
+                                color: const Color(0xFF1976D2),
+                                onTap: () => context.go('/fleet'),
+                              ),
+                              _buildModernMenuCard(
+                                context,
+                                icon: Icons.business_center,
+                                title: 'Serviços\nTerceirizados',
+                                subtitle: 'Gestão de contratos',
+                                color: const Color(0xFF7B1FA2),
+                                onTap: () => context.go('/trade-services'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const WelcomeWidget(),
-            const SizedBox(height: 24),
-            Text(
-              'Módulos do Sistema',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.2,
-                children: <Widget>[
-                  _buildMenuCard(
-                    context,
-                    icon: Icons.assignment,
-                    title: 'Gestão de Vistorias',
-                    onTap: () => context.go('/inspections'),
-                  ),
-                  _buildMenuCard(
-                    context,
-                    icon: Icons.inventory,
-                    title: 'Gestão de Almoxarifado',
-                    onTap: () => context.go('/stock'),
-                  ),
-                  _buildMenuCard(
-                    context,
-                    icon: Icons.directions_car,
-                    title: 'Checklist de Viaturas',
-                    onTap: () => context.go('/fleet'),
-                  ),
-                  _buildMenuCard(
-                    context,
-                    icon: Icons.business,
-                    title: 'Serviços Terceirizados',
-                    onTap: () => context.go('/trade-services'),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -134,7 +273,33 @@ class HomeScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Meu Perfil'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryRed.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.person,
+                color: AppColors.primaryRed,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Meu Perfil',
+              style: TextStyle(
+                color: AppColors.darkRed,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,6 +319,9 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primaryRed,
+            ),
             child: const Text('Fechar'),
           ),
         ],
@@ -163,18 +331,26 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _buildProfileRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 110,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.darkRed,
+              ),
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.black87),
+            ),
+          ),
         ],
       ),
     );
@@ -188,54 +364,126 @@ class HomeScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sair do Sistema'),
-        content: const Text('Tem certeza que deseja sair?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryRed.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.logout,
+                color: AppColors.primaryRed,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Sair do Sistema',
+              style: TextStyle(
+                color: AppColors.darkRed,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Tem certeza que deseja sair?',
+          style: TextStyle(color: Colors.black87),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               ref.read(authNotifierProvider.notifier).signOut();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Sair', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryRed,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Sair'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuCard(
+  Widget _buildModernMenuCard(
     BuildContext context, {
     required IconData icon,
     required String title,
+    required String subtitle,
+    required Color color,
     required VoidCallback onTap,
   }) {
     return Card(
-      elevation: 4,
+      elevation: 8,
+      shadowColor: color.withOpacity(0.3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withOpacity(0.1),
+                color.withOpacity(0.05),
+              ],
+            ),
+          ),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 48,
-                color: Colors.blue.shade700,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  icon,
+                  size: 32,
+                  color: color,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
                 ),
               ),
             ],

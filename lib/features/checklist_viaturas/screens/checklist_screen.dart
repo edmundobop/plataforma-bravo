@@ -4,7 +4,6 @@ import '../models/vehicle_checklist.dart';
 import '../models/checklist_category.dart';
 import '../utils/app_colors.dart';
 import '../widgets/category_card.dart';
-import '../widgets/progress_indicator_widget.dart';
 import 'category_detail_screen.dart';
 import 'signature_screen.dart';
 
