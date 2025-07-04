@@ -50,22 +50,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (_isFirstUser) {
       // Primeiro usuário - criar conta admin
       await authNotifier.register(
-        _emailController.text.trim(),
-        _passwordController.text,
-        UserModel(
-          id: '',
-          email: _emailController.text.trim(),
-          name: 'Administrador',
-          role: UserRole.admin,
-          rank: 'Administrador',
-          createdAt: DateTime.now(),
-        ),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        name: 'Administrador',
+        role: UserRole.admin,
       );
     } else {
       // Login normal
       await authNotifier.signIn(
-        _emailController.text.trim(),
-        _passwordController.text,
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
       );
     }
   }
@@ -74,7 +68,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
 
-    ref.listen<AsyncValue<UserModel?>>(authNotifierProvider, (previous, next) {
+    ref.listen<AsyncValue<AppUser?>>(currentUserProvider, (previous, next) {
       next.when(
         data: (user) {
           if (user != null) {

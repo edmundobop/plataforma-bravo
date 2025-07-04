@@ -89,7 +89,7 @@ class ChecklistItem {
 
   @override
   String toString() {
-    return 'ChecklistItem(id: $id, title: $title, isChecked: $isChecked, photos: ${photoCount})';
+    return 'ChecklistItem(id: $id, title: $title, isChecked: $isChecked, photos: $photoCount)';
   }
 
   @override
