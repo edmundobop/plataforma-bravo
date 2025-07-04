@@ -6,12 +6,16 @@ import '../../app/auth/views/user_management_screen.dart';
 import '../../app/home/views/home_screen.dart';
 import '../../app/inspections/views/inspections_screen.dart';
 import '../../app/stock/views/stock_dashboard_screen.dart';
-import '../../app/fleet/views/fleet_screen.dart';
+import '../../app/fleet/views/fleet_dashboard_screen.dart';
 import '../../app/trade_services/views/trade_services_screen.dart';
 import '../../app/stock/consumables/views/product_registration_screen.dart';
 import '../../app/stock/consumables/views/product_list_screen.dart';
 import '../../app/stock/consumables/views/stock_movement_screen.dart';
+import '../../app/fleet/views/vehicle_registration_screen.dart';
+import '../../app/fleet/views/checklist_form_screen.dart';
+import '../../app/fleet/views/checklist_details_screen.dart';
 import '../../core/models/product.dart';
+import '../../core/models/vehicle.dart';
 import '../providers/auth_providers.dart';
 
 // Provider do router
@@ -72,7 +76,28 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/fleet',
-        builder: (context, state) => const FleetScreen(),
+        builder: (context, state) => const FleetDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'vehicle-registration',
+            builder: (context, state) {
+              final vehicle = state.extra as Vehicle?;
+              return VehicleRegistrationScreen(vehicle: vehicle);
+            },
+          ),
+          GoRoute(
+            path: 'checklist-form/:vehicleId',
+            builder: (context, state) => ChecklistFormScreen(
+              vehicleId: state.pathParameters['vehicleId']!,
+            ),
+          ),
+          GoRoute(
+            path: 'checklist-details/:checklistId',
+            builder: (context, state) => ChecklistDetailsScreen(
+              checklistId: state.pathParameters['checklistId']!,
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/trade-services',

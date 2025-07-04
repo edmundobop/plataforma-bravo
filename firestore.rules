@@ -10,6 +10,16 @@ service cloud.firestore {
     match /products/{productId} {
       // Only admins can create, update, or delete products
       allow create, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // All authenticated users can read products
+      allow read: if request.auth != null;
+    }
+
+    // Vehicles collection rules
+    match /vehicles/{vehicleId} {
+      // Only admins can create, update, or delete vehicles
+      allow create, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // All authenticated users can read vehicles
+      allow read: if request.auth != null;
     }
 
     // Stock movements collection rules
@@ -24,6 +34,16 @@ service cloud.firestore {
       allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
 
       // No one can update or delete stock movements (for audit trail)
+      allow update, delete: if false;
+    }
+
+    // Checklists collection rules
+    match /checklists/{checklistId} {
+      // All authenticated users can create checklists
+      allow create: if request.auth != null;
+      // All authenticated users can read checklists
+      allow read: if request.auth != null;
+      // No one can update or delete checklists (for audit trail)
       allow update, delete: if false;
     }
 

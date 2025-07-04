@@ -95,7 +95,7 @@ class HomeScreen extends ConsumerWidget {
                   _buildMenuCard(
                     context,
                     icon: Icons.directions_car,
-                    title: 'Gestão de Frotas',
+                    title: 'Checklist de Viaturas',
                     onTap: () => context.go('/fleet'),
                   ),
                   _buildMenuCard(

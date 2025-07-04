@@ -1,0 +1,13 @@
+feat: Implement batch stock movements and role-based access control
+
+This commit introduces the following features and improvements:
+
+- **Batch Stock Movements:** Users can now add multiple stock movement items to a list and register them all in a single batch operation, improving efficiency.
+- **Role-Based Access Control (UI & Backend):**
+    - Non-admin users are restricted to only performing 'exit' movements. The 'entry' option is now invisible in the UI.
+    - Non-admin users can no longer create or edit products. Product registration/update buttons and edit/delete options are now invisible in the UI.
+    - Firestore security rules have been created (in `firestore.rules`) to enforce these restrictions on the backend, ensuring data integrity. (Note: These rules need to be deployed to Firebase for full effect.)
+- **UI Enhancements:**
+    - Corrected the display of product lists in the stock movement screen.
+    - Restored the `_getStockStatusColor` helper function.
+    - Ensured proper type handling for `currentStock` in stock movement services.

@@ -132,7 +132,7 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
           ? null
           : _observationController.text.trim(),
       createdAt: DateTime.now(),
-      userId: currentUser.id!,
+      userId: currentUser.id,
     );
 
     setState(() {
