@@ -39,6 +39,11 @@ class StockMovement {
     };
   }
 
+  // Método toMap para compatibilidade
+  Map<String, dynamic> toMap() {
+    return toFirestore();
+  }
+
   // Criar StockMovement a partir de Map do Firestore
   factory StockMovement.fromFirestore(Map<String, dynamic> data, String id) {
     return StockMovement(

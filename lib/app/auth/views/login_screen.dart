@@ -64,10 +64,67 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  String _getErrorMessage(String error) {
+    if (error.contains('user-not-found')) {
+      return 'Usuário não encontrado. Verifique o email digitado.';
+    } else if (error.contains('wrong-password') || error.contains('invalid-credential')) {
+      return 'Senha incorreta. Tente novamente.';
+    } else if (error.contains('invalid-email')) {
+      return 'Email inválido. Verifique o formato do email.';
+    } else if (error.contains('user-disabled')) {
+      return 'Esta conta foi desabilitada. Entre em contato com o administrador.';
+    } else if (error.contains('too-many-requests')) {
+      return 'Muitas tentativas de login. Tente novamente mais tarde.';
+    } else if (error.contains('network-request-failed')) {
+      return 'Erro de conexão. Verifique sua internet e tente novamente.';
+    } else if (error.contains('email-already-in-use')) {
+      return 'Este email já está em uso. Tente fazer login ou use outro email.';
+    } else if (error.contains('weak-password')) {
+      return 'Senha muito fraca. Use pelo menos 6 caracteres.';
+    } else {
+      return 'Erro de autenticação. Verifique suas credenciais e tente novamente.';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
 
+    // Escutar erros do authNotifierProvider
+    ref.listen<AsyncValue<void>>(authNotifierProvider, (previous, next) {
+      next.when(
+        data: (_) {
+          // Login bem-sucedido - verificar se há usuário logado
+          final currentUser = ref.read(currentUserProvider);
+          currentUser.when(
+            data: (user) {
+              if (user != null) {
+                context.go('/');
+              }
+            },
+            loading: () {},
+            error: (_, __) {},
+          );
+        },
+        loading: () {},
+        error: (error, _) {
+          // Mostrar erro de autenticação
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_getErrorMessage(error.toString())),
+              backgroundColor: AppColors.primaryRed,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        },
+      );
+    });
+
+    // Também escutar mudanças no currentUserProvider para navegação
     ref.listen<AsyncValue<AppUser?>>(currentUserProvider, (previous, next) {
       next.when(
         data: (user) {
@@ -79,12 +136,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         error: (error, _) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(error.toString()),
+              content: Text(_getErrorMessage(error.toString())),
               backgroundColor: AppColors.primaryRed,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
+              duration: const Duration(seconds: 4),
             ),
           );
         },

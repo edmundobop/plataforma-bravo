@@ -25,8 +25,6 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
   String? _selectedCategory;
   String? _selectedUnit;
 
-  
-
   final List<String> _units = [
     'Unidade',
     'Kg',
@@ -56,10 +54,15 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
     _maxStockController.text = product.maxStock.toString();
     _currentStockController.text = product.currentStock.toString();
     _locationController.text = product.location;
-    _selectedCategory = categories.firstWhere(
-      (cat) => cat.toLowerCase() == product.category.toLowerCase(),
-      orElse: () => product.category, // Fallback if not found
-    );
+
+    // Aguardar o carregamento das categorias
+    categories.whenData((categoryList) {
+      _selectedCategory = categoryList.firstWhere(
+        (cat) => cat.toLowerCase() == product.category.toLowerCase(),
+        orElse: () => product.category, // Fallback if not found
+      );
+    });
+
     _selectedUnit = product.unit;
   }
 
@@ -106,9 +109,19 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
         await productService.createProduct(product);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Produto cadastrado com sucesso!'),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Produto cadastrado com sucesso!'),
+                ],
+              ),
+              backgroundColor: const Color(0xFF388E3C),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           );
         }
@@ -118,9 +131,19 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
         await productService.updateProduct(updatedProduct);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Produto atualizado com sucesso!'),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Produto atualizado com sucesso!'),
+                ],
+              ),
+              backgroundColor: const Color(0xFF388E3C),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           );
         }
@@ -133,8 +156,18 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao salvar produto: $e'),
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Erro ao salvar produto: $e')),
+              ],
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
       }
@@ -153,40 +186,168 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
     final categories = ref.watch(categoriesProvider);
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
+        title: Text(
+          isEditing ? 'Editar Produto' : 'Cadastrar Produto',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
-        title: Text(isEditing ? 'Editar Produto' : 'Cadastrar Produto'),
-        backgroundColor: Colors.blue.shade700,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFD32F2F), // Vermelho CBM-GO
+                Color(0xFFB71C1C), // Vermelho mais escuro
+              ],
+            ),
+          ),
+        ),
         foregroundColor: Colors.white,
+        elevation: 8,
+        shadowColor: Colors.red.withOpacity(0.3),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, size: 24),
+          onPressed: () => context.pop(),
+          tooltip: 'Voltar',
+        ),
       ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header com ícone
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFD32F2F),
+                      Color(0xFFB71C1C),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.3),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        isEditing ? Icons.edit : Icons.add_box,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isEditing ? 'Editar Produto' : 'Novo Produto',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isEditing ? 'Atualize as informações do produto' : 'Preencha os dados do novo produto',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w300,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Informações básicas
-              Card(
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Informações Básicas',
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD32F2F).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.info,
+                              color: Color(0xFFD32F2F),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Informações Básicas',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFD32F2F),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       TextFormField(
                         controller: _nameController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Nome do Produto *',
                           hintText: 'Ex: Papel A4',
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.inventory, color: Color(0xFFD32F2F)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFFD32F2F)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFFD32F2F), width: 2),
+                          ),
+                          labelStyle: const TextStyle(color: Color(0xFFD32F2F)),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -198,10 +359,19 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _descriptionController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Descrição',
                           hintText: 'Descrição detalhada do produto',
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.description, color: Color(0xFFD32F2F)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFFD32F2F)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFFD32F2F), width: 2),
+                          ),
+                          labelStyle: const TextStyle(color: Color(0xFFD32F2F)),
                         ),
                         maxLines: 3,
                       ),
@@ -209,28 +379,46 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                       Row(
                         children: [
                           Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _selectedCategory,
-                              decoration: const InputDecoration(
-                                labelText: 'Categoria *',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: categories.map((category) {
-                                return DropdownMenuItem(
-                                  value: category,
-                                  child: Text(category),
+                            child: Consumer(
+                              builder: (context, ref, child) {
+                                final categories = ref.watch(categoriesProvider);
+                                return categories.when(
+                                  data: (categoryList) => DropdownButtonFormField<String>(
+                                    value: _selectedCategory,
+                                    decoration: InputDecoration(
+                                      labelText: 'Categoria *',
+                                      prefixIcon: const Icon(Icons.category, color: Color(0xFFD32F2F)),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: Color(0xFFD32F2F)),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: Color(0xFFD32F2F), width: 2),
+                                      ),
+                                      labelStyle: const TextStyle(color: Color(0xFFD32F2F)),
+                                    ),
+                                    items: categoryList.map((category) {
+                                      return DropdownMenuItem(
+                                        value: category,
+                                        child: Text(category),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _selectedCategory = value;
+                                      });
+                                    },
+                                    validator: (value) {
+                                      if (value == null) {
+                                        return 'Categoria é obrigatória';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  loading: () => const CircularProgressIndicator(),
+                                  error: (error, stack) => Text('Erro ao carregar categorias: $error'),
                                 );
-                              }).toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedCategory = value;
-                                });
-                              },
-                              validator: (value) {
-                                if (value == null) {
-                                  return 'Categoria é obrigatória';
-                                }
-                                return null;
                               },
                             ),
                           ),
@@ -238,9 +426,18 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               value: _selectedUnit,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Unidade *',
-                                border: OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.straighten, color: Color(0xFFD32F2F)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFD32F2F)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFD32F2F), width: 2),
+                                ),
+                                labelStyle: const TextStyle(color: Color(0xFFD32F2F)),
                               ),
                               items: _units.map((unit) {
                                 return DropdownMenuItem(
@@ -267,25 +464,67 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+
               // Controle de estoque
-              Card(
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Controle de Estoque',
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF388E3C).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.inventory_2,
+                              color: Color(0xFF388E3C),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Controle de Estoque',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF388E3C),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       TextFormField(
                         controller: _currentStockController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Estoque Atual *',
                           hintText: '0',
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.storage, color: Color(0xFF388E3C)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF388E3C)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF388E3C), width: 2),
+                          ),
+                          labelStyle: const TextStyle(color: Color(0xFF388E3C)),
                         ),
                         keyboardType: TextInputType.number,
                         validator: (value) {
@@ -307,10 +546,19 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                           Expanded(
                             child: TextFormField(
                               controller: _minStockController,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Estoque Mínimo *',
                                 hintText: '0',
-                                border: OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.trending_down, color: Color(0xFFF57C00)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFF57C00)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFF57C00), width: 2),
+                                ),
+                                labelStyle: const TextStyle(color: Color(0xFFF57C00)),
                               ),
                               keyboardType: TextInputType.number,
                               validator: (value) {
@@ -331,10 +579,19 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                           Expanded(
                             child: TextFormField(
                               controller: _maxStockController,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Estoque Máximo *',
                                 hintText: '0',
-                                border: OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.trending_up, color: Color(0xFF388E3C)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF388E3C)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF388E3C), width: 2),
+                                ),
+                                labelStyle: const TextStyle(color: Color(0xFF388E3C)),
                               ),
                               keyboardType: TextInputType.number,
                               validator: (value) {
@@ -359,25 +616,67 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+
               // Localização
-              Card(
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Localização',
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF7B1FA2).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Color(0xFF7B1FA2),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Localização',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF7B1FA2),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       TextFormField(
                         controller: _locationController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Localização *',
                           hintText: 'Ex: Almoxarifado A - Prateleira 1',
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.place, color: Color(0xFF7B1FA2)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF7B1FA2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF7B1FA2), width: 2),
+                          ),
+                          labelStyle: const TextStyle(color: Color(0xFF7B1FA2)),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -390,14 +689,31 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
+
               // Botões
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isLoading ? null : () => context.pop(),
-                      child: const Text('Cancelar'),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[400]!),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextButton(
+                        onPressed: _isLoading ? null : () => context.pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -407,15 +723,46 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                     maintainAnimation: false,
                     maintainState: false,
                     child: Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _submitProduct,
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Text(isEditing ? 'Atualizar' : 'Cadastrar'),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFD32F2F), Color(0xFFB71C1C)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _submitProduct,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : Text(
+                                  isEditing ? 'Atualizar Produto' : 'Cadastrar Produto',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                        ),
                       ),
                     ),
                   ),

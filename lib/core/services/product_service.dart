@@ -5,15 +5,19 @@ class ProductService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'products';
 
-  // Buscar todos os produtos
+  // Buscar todos os produtos (SEM QUALQUER ORDENAÇÃO OU FILTRO)
   Stream<List<Product>> getProducts() {
     return _firestore
         .collection(_collection)
-        .orderBy('name')
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => Product.fromFirestore(doc.data(), doc.id))
             .toList());
+  }
+
+  // Método alternativo para compatibilidade
+  Stream<List<Product>> getProductsStream() {
+    return getProducts();
   }
 
   // Buscar produto por ID
@@ -62,82 +66,115 @@ class ProductService {
     }
   }
 
-  // Buscar produtos por categoria
-  Stream<List<Product>> getProductsByCategory(String category) {
-    return _firestore
-        .collection(_collection)
-        .where('category', isEqualTo: category)
-        .orderBy('name')
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Product.fromFirestore(doc.data(), doc.id))
-            .toList());
+  // Buscar categorias (PROCESSAMENTO NO CLIENTE)
+  Future<List<String>> getCategories() async {
+    try {
+      final snapshot = await _firestore.collection(_collection).get();
+      final categories = <String>{};
+      
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        if (data['category'] != null) {
+          categories.add(data['category'] as String);
+        }
+      }
+      
+      return categories.toList()..sort();
+    } catch (e) {
+      throw Exception('Erro ao buscar categorias: $e');
+    }
   }
 
-  // Buscar produtos com estoque baixo
-  Stream<List<Product>> getLowStockProducts() {
-    return _firestore
-        .collection(_collection)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Product.fromFirestore(doc.data(), doc.id))
-            .where((product) => product.currentStock <= product.minStock)
-            .toList());
+  // TODOS OS MÉTODOS ABAIXO FAZEM PROCESSAMENTO NO CLIENTE
+  // PARA EVITAR CONSULTAS COMPLEXAS NO FIRESTORE
+
+  // Buscar produtos por categoria (PROCESSAMENTO NO CLIENTE)
+  Future<List<Product>> getProductsByCategory(String category) async {
+    try {
+      final snapshot = await _firestore.collection(_collection).get();
+      final products = snapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data(), doc.id))
+          .where((product) => product.category == category)
+          .toList();
+      
+      return products;
+    } catch (e) {
+      throw Exception('Erro ao buscar produtos por categoria: $e');
+    }
   }
 
-  // Buscar produtos com estoque crítico
-  Stream<List<Product>> getCriticalStockProducts() {
-    return _firestore
-        .collection(_collection)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Product.fromFirestore(doc.data(), doc.id))
-            .where((product) => product.currentStock < (product.minStock * 0.5))
-            .toList());
+  // Buscar produtos com estoque baixo (PROCESSAMENTO NO CLIENTE)
+  Future<List<Product>> getLowStockProducts() async {
+    try {
+      final snapshot = await _firestore.collection(_collection).get();
+      final products = snapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data(), doc.id))
+          .where((product) => product.currentStock <= product.minStock)
+          .toList();
+      
+      return products;
+    } catch (e) {
+      throw Exception('Erro ao buscar produtos com estoque baixo: $e');
+    }
   }
 
-  // Buscar produtos por nome ou descrição
-  Stream<List<Product>> searchProducts(String query) {
-    return _firestore
-        .collection(_collection)
-        .orderBy('name')
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Product.fromFirestore(doc.data(), doc.id))
-            .where((product) =>
-                product.name.toLowerCase().contains(query.toLowerCase()) ||
-                product.description.toLowerCase().contains(query.toLowerCase()))
-            .toList());
+  // Buscar produtos em estoque crítico (PROCESSAMENTO NO CLIENTE)
+  Future<List<Product>> getCriticalStockProducts() async {
+    try {
+      final snapshot = await _firestore.collection(_collection).get();
+      final products = snapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data(), doc.id))
+          .where((product) => product.currentStock == 0)
+          .toList();
+      
+      return products;
+    } catch (e) {
+      throw Exception('Erro ao buscar produtos em estoque crítico: $e');
+    }
   }
 
-  // Obter estatísticas de estoque
-  Future<Map<String, int>> getStockStats() async {
+  // Buscar produtos por nome (PROCESSAMENTO NO CLIENTE)
+  Future<List<Product>> searchProductsByName(String name) async {
+    try {
+      final snapshot = await _firestore.collection(_collection).get();
+      final products = snapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data(), doc.id))
+          .where((product) => 
+              product.name.toLowerCase().contains(name.toLowerCase()))
+          .toList();
+      
+      return products;
+    } catch (e) {
+      throw Exception('Erro ao buscar produtos: $e');
+    }
+  }
+
+  // Obter estatísticas básicas (PROCESSAMENTO NO CLIENTE)
+  Future<Map<String, dynamic>> getProductStats() async {
     try {
       final snapshot = await _firestore.collection(_collection).get();
       final products = snapshot.docs
           .map((doc) => Product.fromFirestore(doc.data(), doc.id))
           .toList();
 
+      final totalProducts = products.length;
+      final lowStockProducts = products
+          .where((p) => p.currentStock <= p.minStock)
+          .length;
+      final criticalStockProducts = products
+          .where((p) => p.currentStock == 0)
+          .length;
+      final totalValue = products.fold<double>(
+          0, (total, product) => total + (product.currentStock * 10.0));
+
       return {
-        'total': products.length,
-        'lowStock': products.where((p) => p.currentStock <= p.minStock).length,
-        'critical': products.where((p) => p.currentStock < (p.minStock * 0.5)).length,
-        'normal': products.where((p) => p.currentStock > p.minStock).length,
+        'totalProducts': totalProducts,
+        'lowStockProducts': lowStockProducts,
+        'criticalStockProducts': criticalStockProducts,
+        'totalValue': totalValue,
       };
     } catch (e) {
       throw Exception('Erro ao obter estatísticas: $e');
-    }
-  }
-
-  // Atualizar estoque do produto
-  Future<void> updateProductStock(String productId, int newStock) async {
-    try {
-      await _firestore.collection(_collection).doc(productId).update({
-        'currentStock': newStock,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw Exception('Erro ao atualizar estoque: $e');
     }
   }
 }

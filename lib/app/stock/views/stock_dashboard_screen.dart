@@ -1,334 +1,350 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/providers/providers.dart';
 import '../../../core/models/models.dart';
+import '../../../core/providers/providers.dart';
 
-class StockDashboardScreen extends ConsumerStatefulWidget {
+class StockDashboardScreen extends ConsumerWidget {
   const StockDashboardScreen({super.key});
 
   @override
-  ConsumerState<StockDashboardScreen> createState() => _StockDashboardScreenState();
-}
-
-class _StockDashboardScreenState extends ConsumerState<StockDashboardScreen> {
-  int _selectedIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> screens = [
-      const _DashboardOverview(),
-      const _ConsumablesSection(),
-      const _EquipmentSection(),
-      const _CautelasSection(),
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productsAsync = ref.watch(productsStreamProvider);
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Gestão de Almoxarifado'),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'),
-          tooltip: 'Voltar ao Menu Principal',
-        ),
-      ),
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-            labelType: NavigationRailLabelType.all,
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.dashboard),
-                label: Text('Dashboard'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.inventory),
-                label: Text('Consumíveis'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.build),
-                label: Text('Equipamentos'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.assignment),
-                label: Text('Cautelas'),
-              ),
-            ],
+        title: const Text(
+          'Dashboard de Estoque',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: screens[_selectedIndex],
+        ),
+        backgroundColor: Colors.red[600],
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.go('/'),
+        ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              onPressed: () {
+                ref.invalidate(productsStreamProvider);
+              },
+            ),
           ),
         ],
       ),
-    );
-  }
-}
+      body: productsAsync.when(
+        data: (products) => SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.red[600]!, Colors.red[700]!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.dashboard,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Gestão de Almoxarifado',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Controle completo do seu estoque',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
 
-class _DashboardOverview extends ConsumerWidget {
-  const _DashboardOverview();
+              // Overview das estatísticas
+              _DashboardOverview(products: products),
+              const SizedBox(height: 32),
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final stockStatsAsync = ref.watch(stockStatsProvider);
-    final lowStockProductsAsync = ref.watch(lowStockProductsStreamProvider);
-    final recentMovementsAsync = ref.watch(recentMovementsStreamProvider);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard de Estoque'),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Estatísticas gerais
-            Text(
-              'Visão Geral',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-            stockStatsAsync.when(
-              data: (stats) => Row(
+              // Ações rápidas
+              Row(
                 children: [
-                  Expanded(
-                    child: _StatsCard(
-                      title: 'Total de Produtos',
-                      value: stats['totalProducts'].toString(),
-                      icon: Icons.inventory_2,
-                      color: Colors.blue,
-                    ),
+                  const Icon(
+                    Icons.flash_on,
+                    color: Colors.orange,
+                    size: 24,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _StatsCard(
-                      title: 'Total de Itens',
-                      value: stats['totalItems'].toString(),
-                      icon: Icons.widgets,
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _StatsCard(
-                      title: 'Estoque Baixo',
-                      value: stats['lowStockProducts'].toString(),
-                      icon: Icons.warning,
-                      color: Colors.orange,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _StatsCard(
-                      title: 'Estoque Crítico',
-                      value: stats['criticalStockProducts'].toString(),
-                      icon: Icons.error,
-                      color: Colors.red,
+                  const SizedBox(width: 12),
+                  Text(
+                    'Ações Rápidas',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
                     ),
                   ),
                 ],
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Text('Erro ao carregar estatísticas: $error'),
-            ),
-            const SizedBox(height: 32),
-            
-            // Ações rápidas
-            Text(
-              'Ações Rápidas',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionCard(
-                    title: 'Nova Movimentação',
-                    subtitle: 'Registrar entrada ou saída',
-                    icon: Icons.swap_horiz,
-                    color: Colors.blue,
-                    onTap: () => context.push('/stock/movement'),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _QuickActionCard(
+                      title: 'Movimentação',
+                      subtitle: 'Entrada e saída',
+                      icon: Icons.swap_horiz,
+                      color: Colors.blue,
+                      onTap: () => context.go('/stock/movement'),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Consumer(
-                  builder: (context, ref, child) {
-                    final isAdmin = ref.watch(isAdminProvider);
-                    return isAdmin
-                        ? Expanded(
-                            child: _QuickActionCard(
-                              title: 'Cadastrar Produto',
-                              subtitle: 'Adicionar novo produto',
-                              icon: Icons.add_box,
-                              color: Colors.green,
-                              onTap: () => context.push('/stock/product-registration'),
-                            ),
-                          )
-                        : const SizedBox.shrink();
-                  },
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _QuickActionCard(
-                    title: 'Lista de Produtos',
-                    subtitle: 'Ver todos os produtos',
-                    icon: Icons.list,
-                    color: Colors.purple,
-                    onTap: () => context.push('/stock/products'),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _QuickActionCard(
+                      title: 'Novo Produto',
+                      subtitle: 'Cadastrar item',
+                      icon: Icons.add_box,
+                      color: Colors.green,
+                      onTap: () => context.go('/stock/product-registration'),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _QuickActionCard(
+                      title: 'Lista de Produtos',
+                      subtitle: 'Ver todos',
+                      icon: Icons.list_alt,
+                      color: Colors.purple,
+                      onTap: () => context.go('/stock/products'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
 
-            // Produtos com estoque baixo
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Produtos com estoque baixo
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+              // Informação sobre funcionalidades disponíveis
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.green[600],
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Produtos com Estoque Baixo',
-                            style: Theme.of(context).textTheme.titleLarge,
+                            'Sistema Funcionando',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[800],
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          lowStockProductsAsync.when(
-                            data: (products) {
-                              if (products.isEmpty) {
-                                return const Text('Nenhum produto com estoque baixo');
-                              }
-                              return Column(
-                                children: products.take(5).map((product) {
-                                  return ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: _getStockStatusColor(product),
-                                      child: Text(
-                                        product.currentStock.toString(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    title: Text(product.name),
-                                    subtitle: Text('${product.category} - ${product.stockStatus}'),
-                                    trailing: Text('${product.currentStock} ${product.unit}'),
-                                  );
-                                }).toList(),
-                              );
-                            },
-                            loading: () => const CircularProgressIndicator(),
-                            error: (error, stack) => Text('Erro: $error'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                
-                // Movimentações recentes
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                          const SizedBox(height: 4),
                           Text(
-                            'Movimentações Recentes',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 16),
-                          recentMovementsAsync.when(
-                            data: (movements) {
-                              if (movements.isEmpty) {
-                                return const Text('Nenhuma movimentação registrada');
-                              }
-                              return Column(
-                                children: movements.take(5).map((movement) {
-                                  return ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: movement.type == MovementType.entry 
-                                          ? Colors.green 
-                                          : Colors.red,
-                                      child: Icon(
-                                        movement.type == MovementType.entry 
-                                            ? Icons.arrow_downward 
-                                            : Icons.arrow_upward,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    title: Text(movement.productName),
-                                    subtitle: Text(
-                                      '${movement.type == MovementType.entry ? 'Entrada' : 'Saída'} - ${movement.reason}',
-                                    ),
-                                    trailing: Text(
-                                      '${movement.type == MovementType.entry ? '+' : '-'}${movement.quantity}',
-                                      style: TextStyle(
-                                        color: movement.type == MovementType.entry 
-                                            ? Colors.green 
-                                            : Colors.red,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              );
-                            },
-                            loading: () => const CircularProgressIndicator(),
-                            error: (error, stack) => Text('Erro: $error'),
+                            'Todas as funcionalidades de gestão de estoque estão disponíveis através das ações rápidas acima.',
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
+        ),
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Erro ao carregar dados',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(productsStreamProvider),
+                child: const Text('Tentar Novamente'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Color _getStockStatusColor(Product product) {
-    switch (product.stockStatus) {
-      case 'Crítico':
-        return Colors.red;
-      case 'Baixo':
-        return Colors.orange;
-      default:
-        return Colors.green;
-    }
+class _DashboardOverview extends StatelessWidget {
+  final List<Product> products;
+
+  const _DashboardOverview({required this.products});
+
+  @override
+  Widget build(BuildContext context) {
+    final totalProducts = products.length;
+    final lowStockProducts = products.where((p) => p.currentStock <= p.minStock).length;
+    final criticalStockProducts = products.where((p) => p.currentStock == 0).length;
+    final totalValue = products.fold<double>(0, (sum, product) => sum + (product.currentStock * 10.0));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.analytics,
+              color: Colors.green,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Visão Geral',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                title: 'Total de Produtos',
+                value: totalProducts.toString(),
+                icon: Icons.inventory,
+                color: Colors.blue,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _StatCard(
+                title: 'Estoque Baixo',
+                value: lowStockProducts.toString(),
+                icon: Icons.warning,
+                color: Colors.orange,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                title: 'Estoque Crítico',
+                value: criticalStockProducts.toString(),
+                icon: Icons.error,
+                color: Colors.red,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _StatCard(
+                title: 'Valor Estimado',
+                value: 'R\$ ${totalValue.toStringAsFixed(2)}',
+                icon: Icons.attach_money,
+                color: Colors.green,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }
 
-class _StatsCard extends StatelessWidget {
+class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
   final Color color;
 
-  const _StatsCard({
+  const _StatCard({
     required this.title,
     required this.value,
     required this.icon,
@@ -337,34 +353,61 @@ class _StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 20,
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -387,249 +430,58 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: color, size: 32),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ConsumablesSection extends ConsumerWidget {
-  const _ConsumablesSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(productsStreamProvider);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Consumíveis'),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _FeatureCard(
-                    title: 'Total de Produtos',
-                    value: productsAsync.when(
-                      data: (products) => products.length.toString(),
-                      loading: () => '...',
-                      error: (_, __) => 'Erro',
-                    ),
-                    icon: Icons.inventory,
-                    color: Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _FeatureCard(
-                    title: 'Estoque Baixo',
-                    value: productsAsync.when(
-                      data: (products) => products
-                          .where((p) => p.currentStock <= p.minStock)
-                          .length
-                          .toString(),
-                      loading: () => '...',
-                      error: (_, __) => 'Erro',
-                    ),
-                    icon: Icons.warning,
-                    color: Colors.orange,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _FeatureCard(
-                    title: 'Categorias',
-                    value: productsAsync.when(
-                      data: (products) => products
-                          .map((p) => p.category)
-                          .toSet()
-                          .length
-                          .toString(),
-                      loading: () => '...',
-                      error: (_, __) => 'Erro',
-                    ),
-                    icon: Icons.category,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.push('/stock/products'),
-                    icon: const Icon(Icons.list),
-                    label: const Text('Ver Lista de Produtos'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Consumer(
-                  builder: (context, ref, child) {
-                    final isAdmin = ref.watch(isAdminProvider);
-                    return isAdmin
-                        ? Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => context.push('/stock/product-registration'),
-                              icon: const Icon(Icons.add),
-                              label: const Text('Cadastrar Produto'),
-                            ),
-                          )
-                        : const SizedBox.shrink();
-                  },
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.push('/stock/movement'),
-                    icon: const Icon(Icons.swap_horiz),
-                    label: const Text('Nova Movimentação'),
-                  ),
-                ),
-              ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
           ],
+          border: Border.all(
+            color: color.withOpacity(0.2),
+            width: 1,
+          ),
         ),
-      ),
-    );
-  }
-}
-
-class _FeatureCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _FeatureCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Icon(icon, size: 48, color: color),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
               ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
               textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EquipmentSection extends StatelessWidget {
-  const _EquipmentSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Equipamentos'),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.build, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'Seção de Equipamentos',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Em desenvolvimento...',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CautelasSection extends StatelessWidget {
-  const _CautelasSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cautelas'),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.assignment, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'Seção de Cautelas',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Em desenvolvimento...',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),

@@ -80,9 +80,19 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
     final products = productsAsync.value;
     if (products == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erro: Lista de produtos não carregada'),
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Erro: Lista de produtos não carregada'),
+            ],
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       );
       return;
@@ -91,9 +101,19 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
     final selectedProduct = _getSelectedProduct(products);
     if (selectedProduct == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erro: Produto não encontrado'),
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Erro: Produto não encontrado'),
+            ],
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       );
       return;
@@ -104,8 +124,18 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
     if (_movementType == MovementType.exit && quantity > selectedProduct.currentStock) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Estoque insuficiente. Disponível: ${selectedProduct.currentStock}'),
-          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              const Icon(Icons.warning, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Estoque insuficiente. Disponível: ${selectedProduct.currentStock}')),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       );
       return;
@@ -114,9 +144,19 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
     final currentUser = ref.read(currentUserProvider).value;
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Usuário não autenticado.'),
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Usuário não autenticado.'),
+            ],
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       );
       return;
@@ -140,14 +180,41 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
     });
 
     _resetForm();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Movimentação adicionada à lista!'),
+          ],
+        ),
+        backgroundColor: const Color(0xFF388E3C),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
   }
 
   Future<void> _submitMovements() async {
     if (_movements.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Adicione pelo menos uma movimentação'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.warning, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Adicione pelo menos uma movimentação'),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       );
       return;
@@ -159,13 +226,23 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
 
     try {
       final movementService = ref.read(stockMovementServiceProvider);
-      await movementService.createMovementsInBatch(_movements);
+      await movementService.createMovementsBatch(_movements);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Movimentações registradas com sucesso!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Movimentações registradas com sucesso!'),
+              ],
+            ),
+            backgroundColor: const Color(0xFF388E3C),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
         setState(() {
@@ -177,8 +254,18 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao registrar movimentações: ${e.toString()}'),
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Erro ao registrar movimentações: ${e.toString()}')),
+              ],
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
         print('Error: $e');
@@ -208,31 +295,156 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
     final productsAsync = ref.watch(productsStreamProvider);
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Movimentação de Estoque em Lote'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text(
+          'Movimentação de Estoque',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFD32F2F), // Vermelho CBM-GO
+                Color(0xFFB71C1C), // Vermelho mais escuro
+              ],
+            ),
+          ),
+        ),
+        foregroundColor: Colors.white,
+        elevation: 8,
+        shadowColor: Colors.red.withOpacity(0.3),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, size: 24),
+          onPressed: () => context.pop(),
+          tooltip: 'Voltar',
+        ),
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Header com ícone
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFD32F2F),
+                    Color(0xFFB71C1C),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.3),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.swap_horiz,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Movimentação de Estoque',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Registre entradas e saídas de produtos',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
             Form(
               key: _formKey,
               child: Column(
                 children: [
                   // Tipo de movimentação
-                  Card(
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(20.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Tipo de Movimentação',
-                            style: Theme.of(context).textTheme.titleLarge,
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD32F2F).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.swap_vert,
+                                  color: Color(0xFFD32F2F),
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Tipo de Movimentação',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFFD32F2F),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           Row(
                             children: [
                               Consumer(
@@ -240,32 +452,72 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
                                   final isAdmin = ref.watch(isAdminProvider);
                                   return isAdmin
                                       ? Expanded(
-                                          child: RadioListTile<MovementType>(
-                                            title: const Text('Entrada'),
-                                            value: MovementType.entry,
-                                            groupValue: _movementType,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _movementType = value!;
-                                                _selectedReason = null; // Reset reason
-                                              });
-                                            },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: _movementType == MovementType.entry 
+                                                  ? const Color(0xFF388E3C).withOpacity(0.1)
+                                                  : Colors.grey[50],
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: _movementType == MovementType.entry 
+                                                    ? const Color(0xFF388E3C)
+                                                    : Colors.grey[300]!,
+                                              ),
+                                            ),
+                                            child: RadioListTile<MovementType>(
+                                              title: const Text(
+                                                'Entrada',
+                                                style: TextStyle(fontWeight: FontWeight.w600),
+                                              ),
+                                              value: MovementType.entry,
+                                              groupValue: _movementType,
+                                              activeColor: const Color(0xFF388E3C),
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _movementType = value!;
+                                                  _selectedReason = null;
+                                                });
+                                              },
+                                            ),
                                           ),
                                         )
                                       : const SizedBox.shrink();
                                 },
                               ),
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final isAdmin = ref.watch(isAdminProvider);
+                                  return isAdmin ? const SizedBox(width: 16) : const SizedBox.shrink();
+                                },
+                              ),
                               Expanded(
-                                child: RadioListTile<MovementType>(
-                                  title: const Text('Saída'),
-                                  value: MovementType.exit,
-                                  groupValue: _movementType,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _movementType = value!;
-                                      _selectedReason = null; // Reset reason
-                                    });
-                                  },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: _movementType == MovementType.exit 
+                                        ? const Color(0xFFF57C00).withOpacity(0.1)
+                                        : Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _movementType == MovementType.exit 
+                                          ? const Color(0xFFF57C00)
+                                          : Colors.grey[300]!,
+                                    ),
+                                  ),
+                                  child: RadioListTile<MovementType>(
+                                    title: const Text(
+                                      'Saída',
+                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                    value: MovementType.exit,
+                                    groupValue: _movementType,
+                                    activeColor: const Color(0xFFF57C00),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _movementType = value!;
+                                        _selectedReason = null;
+                                      });
+                                    },
+                                  ),
                                 ),
                               ),
                             ],
@@ -274,35 +526,90 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // Seleção do produto
-                  Card(
+                  const SizedBox(height: 20),
+
+                  // Seleção de produto
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(20.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Produto',
-                            style: Theme.of(context).textTheme.titleLarge,
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF7B1FA2).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.inventory,
+                                  color: Color(0xFF7B1FA2),
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Produto',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF7B1FA2),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           productsAsync.when(
                             data: (products) {
-                              if (products.isEmpty) {
-                                return const Text('Nenhum produto cadastrado');
-                              }
-                              
                               return DropdownButtonFormField<String>(
                                 value: _selectedProductId,
-                                decoration: const InputDecoration(
-                                  labelText: 'Selecione o produto *',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: 'Selecione o Produto *',
+                                  prefixIcon: const Icon(Icons.inventory_2, color: Color(0xFF7B1FA2)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Color(0xFF7B1FA2)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Color(0xFF7B1FA2), width: 2),
+                                  ),
+                                  labelStyle: const TextStyle(color: Color(0xFF7B1FA2)),
                                 ),
                                 items: products.map((product) {
                                   return DropdownMenuItem(
                                     value: product.id,
-                                    child: Text('${product.name} (${product.currentStock} ${product.unit})'),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          product.name,
+                                          style: const TextStyle(fontWeight: FontWeight.w600),
+                                        ),
+                                        Text(
+                                          'Estoque: ${product.currentStock} ${product.unit}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: _getStockStatusColor(product),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   );
                                 }).toList(),
                                 onChanged: (value) {
@@ -318,136 +625,173 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
                                 },
                               );
                             },
-                            loading: () => const CircularProgressIndicator(),
-                            error: (error, stack) => Text('Erro ao carregar produtos: $error'),
-                          ),
-                          const SizedBox(height: 16),
-                          // Informações do produto selecionado
-                          productsAsync.when(
-                            data: (products) {
-                              final selectedProduct = _getSelectedProduct(products);
-                              if (selectedProduct == null) {
-                                return const SizedBox.shrink();
-                              }
-                              
-                              return Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Informações do Produto',
-                                      style: Theme.of(context).textTheme.titleMedium,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text('Categoria: ${selectedProduct.category}'),
-                                    Text('Estoque Atual: ${selectedProduct.currentStock} ${selectedProduct.unit}'),
-                                    Text('Localização: ${selectedProduct.location}'),
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 4),
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: _getStockStatusColor(selectedProduct),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        selectedProduct.stockStatus,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            loading: () => const SizedBox.shrink(),
-                            error: (error, stack) => const SizedBox.shrink(),
+                            loading: () => Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey[300]!),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text('Carregando produtos...'),
+                                ],
+                              ),
+                            ),
+                            error: (error, stack) => Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.red),
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.red.withOpacity(0.1),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.error, color: Colors.red),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: Text('Erro ao carregar produtos: $error')),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
+
                   // Detalhes da movimentação
-                  Card(
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(20.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Detalhes da Movimentação',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 16),
                           Row(
                             children: [
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _quantityController,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Quantidade *',
-                                    hintText: '0',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Quantidade é obrigatória';
-                                    }
-                                    if (int.tryParse(value) == null) {
-                                      return 'Digite um número válido';
-                                    }
-                                    if (int.parse(value) <= 0) {
-                                      return 'Quantidade deve ser maior que zero';
-                                    }
-                                    return null;
-                                  },
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1976D2).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.edit_note,
+                                  color: Color(0xFF1976D2),
+                                  size: 24,
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  value: _selectedReason,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Motivo *',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  items: _currentReasons.map((reason) {
-                                    return DropdownMenuItem(
-                                      value: reason,
-                                      child: Text(reason),
-                                    );
-                                  }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedReason = value;
-                                    });
-                                  },
-                                  validator: (value) {
-                                    if (value == null) {
-                                      return 'Motivo é obrigatório';
-                                    }
-                                    return null;
-                                  },
+                              const SizedBox(width: 12),
+                              Text(
+                                'Detalhes da Movimentação',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF1976D2),
                                 ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 20),
+                          // Campo Quantidade
+                          TextFormField(
+                            controller: _quantityController,
+                            decoration: InputDecoration(
+                              labelText: 'Quantidade *',
+                              hintText: '0',
+                              prefixIcon: const Icon(Icons.numbers, color: Color(0xFF1976D2)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF1976D2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF1976D2), width: 2),
+                              ),
+                              labelStyle: const TextStyle(color: Color(0xFF1976D2)),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Quantidade é obrigatória';
+                              }
+                              if (int.tryParse(value) == null) {
+                                return 'Digite um número válido';
+                              }
+                              if (int.parse(value) <= 0) {
+                                return 'Quantidade deve ser maior que zero';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          // Campo Motivo
+                          DropdownButtonFormField<String>(
+                            value: _selectedReason,
+                            decoration: InputDecoration(
+                              labelText: 'Motivo *',
+                              prefixIcon: const Icon(Icons.help_outline, color: Color(0xFF1976D2)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF1976D2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF1976D2), width: 2),
+                              ),
+                              labelStyle: const TextStyle(color: Color(0xFF1976D2)),
+                            ),
+                            items: _currentReasons.map((reason) {
+                              return DropdownMenuItem(
+                                value: reason,
+                                child: Text(reason),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedReason = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Motivo é obrigatório';
+                              }
+                              return null;
+                            },
+                          ),
                           const SizedBox(height: 16),
+                          // Campo Observações
                           TextFormField(
                             controller: _observationController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Observações',
                               hintText: 'Informações adicionais (opcional)',
-                              border: OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.note_add, color: Color(0xFF1976D2)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF1976D2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF1976D2), width: 2),
+                              ),
+                              labelStyle: const TextStyle(color: Color(0xFF1976D2)),
                             ),
                             maxLines: 3,
                           ),
@@ -459,41 +803,153 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _addMovementToList,
-              icon: const Icon(Icons.add),
-              label: const Text('Adicionar à Lista'),
+
+            // Botão adicionar à lista
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF388E3C), Color(0xFF2E7D32)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: _addMovementToList,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const Text(
+                  'Adicionar à Lista',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 24),
-            // List of movements to be submitted
+
+            // Lista de movimentações
             if (_movements.isNotEmpty)
-              Card(
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Movimentações a Registrar',
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF57C00).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.list_alt,
+                              color: Color(0xFFF57C00),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Movimentações a Registrar (${_movements.length})',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFF57C00),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
-                      ListView.builder(
+                      ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: _movements.length,
+                        separatorBuilder: (context, index) => const Divider(),
                         itemBuilder: (context, index) {
                           final movement = _movements[index];
-                          return ListTile(
-                            title: Text('${movement.productName} (${movement.quantity})'),
-                            subtitle: Text('${movement.typeDescription} - ${movement.reason}'),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              onPressed: () {
-                                setState(() {
-                                  _movements.removeAt(index);
-                                });
-                              },
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: movement.type == MovementType.entry 
+                                  ? const Color(0xFF388E3C).withOpacity(0.1)
+                                  : const Color(0xFFF57C00).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: movement.type == MovementType.entry 
+                                        ? const Color(0xFF388E3C)
+                                        : const Color(0xFFF57C00),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    movement.type == MovementType.entry 
+                                        ? Icons.arrow_downward
+                                        : Icons.arrow_upward,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${movement.productName} (${movement.quantity})',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${movement.typeDescription} - ${movement.reason}',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      _movements.removeAt(index);
+                                    });
+                                  },
+                                  tooltip: 'Remover',
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -503,12 +959,49 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
                 ),
               ),
             const SizedBox(height: 24),
-            // Submit button
-            ElevatedButton(
-              onPressed: _isLoading || _movements.isEmpty ? null : _submitMovements,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Registrar Todas as Movimentações'),
+
+            // Botão registrar todas
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFD32F2F), Color(0xFFB71C1C)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: _isLoading || _movements.isEmpty ? null : _submitMovements,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  disabledBackgroundColor: Colors.grey[300],
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        'Registrar Todas as Movimentações (${_movements.length})',
+                        style: TextStyle(
+                          color: _movements.isEmpty ? Colors.grey[600] : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+              ),
             ),
           ],
         ),
