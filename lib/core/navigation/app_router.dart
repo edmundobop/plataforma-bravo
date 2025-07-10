@@ -17,11 +17,12 @@ import '../../app/fleet/views/checklist_details_screen.dart';
 import '../../core/models/product.dart';
 import '../../core/models/vehicle.dart';
 import '../providers/auth_providers.dart';
+import '../../app/profile/views/profile_screen.dart';
 
 // Provider do router
 final routerProvider = Provider<GoRouter>((ref) {
   final isLoggedIn = ref.watch(isLoggedInProvider);
-  
+
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
@@ -29,12 +30,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!isLoggedIn && state.matchedLocation != '/login') {
         return '/login';
       }
-      
+
       // Se estiver logado e estiver na tela de login
       if (isLoggedIn && state.matchedLocation == '/login') {
         return '/';
       }
-      
+
       return null; // Não redirecionar
     },
     routes: [
@@ -43,7 +44,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/login',
         builder: (context, state) => const LoginScreen(),
       ),
-      
+
       // Rotas principais (protegidas)
       GoRoute(
         path: '/',
@@ -103,7 +104,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/trade-services',
         builder: (context, state) => const TradeServicesScreen(),
       ),
-      
+      // Rota de perfil do usuário
+      // Esta rota pode ser acessada por qualquer usuário logado
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+
       // Rota de gerenciamento de usuários (apenas admin)
       GoRoute(
         path: '/users',
@@ -120,7 +127,7 @@ class AppRouter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    
+
     return MaterialApp.router(
       title: 'Gestão CBM-GO',
       theme: ThemeData(

@@ -10,25 +10,29 @@ class ChecklistDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final checklistAsync = ref.watch(checklistServiceProvider).getChecklistById(checklistId);
+    final checklistAsync =
+        ref.watch(checklistServiceProvider).getChecklistById(checklistId);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalhes do Checklist'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
       ),
       body: FutureBuilder<Checklist?>(
         future: checklistAsync,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+                child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD32F2F)),
+            ));
           } else if (snapshot.hasError) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error, size: 64, color: Colors.red),
+                  const Icon(Icons.error, size: 64, color: Color(0xFFD32F2F)),
                   const SizedBox(height: 16),
                   Text('Erro ao carregar checklist: ${snapshot.error}'),
                   const SizedBox(height: 16),
@@ -52,14 +56,33 @@ class ChecklistDetailsScreen extends ConsumerWidget {
                         children: [
                           Text(
                             'Informações Gerais',
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: const Color(0xFFD32F2F),
+                                ),
                           ),
                           const SizedBox(height: 16),
-                          _DetailRow('Data do Checklist', checklist.checklistDate.toLocal().toString().split(' ')[0]),
-                          _DetailRow('Status Geral', checklist.status.toString().split('.').last.toUpperCase()),
-                          _DetailRow('Realizado por', checklist.userId), // TODO: Fetch user name
-                          if (checklist.generalObservations != null && checklist.generalObservations!.isNotEmpty)
-                            _DetailRow('Observações Gerais', checklist.generalObservations!),
+                          _DetailRow(
+                              'Data do Checklist',
+                              checklist.checklistDate
+                                  .toLocal()
+                                  .toString()
+                                  .split(' ')[0]),
+                          _DetailRow(
+                              'Status Geral',
+                              checklist.status
+                                  .toString()
+                                  .split('.')
+                                  .last
+                                  .toUpperCase()),
+                          _DetailRow('Realizado por',
+                              checklist.userId), // TODO: Fetch user name
+                          if (checklist.generalObservations != null &&
+                              checklist.generalObservations!.isNotEmpty)
+                            _DetailRow('Observações Gerais',
+                                checklist.generalObservations!),
                         ],
                       ),
                     ),
@@ -73,7 +96,12 @@ class ChecklistDetailsScreen extends ConsumerWidget {
                         children: [
                           Text(
                             'Itens do Checklist',
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: const Color(0xFFD32F2F),
+                                ),
                           ),
                           const SizedBox(height: 16),
                           ListView.builder(
@@ -124,7 +152,7 @@ class ChecklistDetailsScreen extends ConsumerWidget {
       case ChecklistItemStatus.ok:
         return Colors.green;
       case ChecklistItemStatus.notOk:
-        return Colors.red;
+        return const Color(0xFFD32F2F);
       case ChecklistItemStatus.na:
         return Colors.grey;
     }
@@ -148,7 +176,10 @@ class _DetailRow extends StatelessWidget {
             width: 150,
             child: Text(
               '$label:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFD32F2F),
+              ),
             ),
           ),
           Expanded(child: Text(value)),

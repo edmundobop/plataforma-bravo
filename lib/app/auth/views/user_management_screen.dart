@@ -9,7 +9,8 @@ class UserManagementScreen extends ConsumerStatefulWidget {
   const UserManagementScreen({super.key});
 
   @override
-  ConsumerState<UserManagementScreen> createState() => _UserManagementScreenState();
+  ConsumerState<UserManagementScreen> createState() =>
+      _UserManagementScreenState();
 }
 
 class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
@@ -27,7 +28,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           onPressed: () => context.go('/'),
         ),
         title: const Text('Gerenciar Usuários'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
       ),
       body: Column(
@@ -57,8 +58,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               data: (users) {
                 final filteredUsers = users.where((user) {
                   return user.name.toLowerCase().contains(_searchQuery) ||
-                         user.email.toLowerCase().contains(_searchQuery) ||
-                         user.role.displayName.toLowerCase().contains(_searchQuery);
+                      user.email.toLowerCase().contains(_searchQuery) ||
+                      user.role.displayName
+                          .toLowerCase()
+                          .contains(_searchQuery);
                 }).toList();
 
                 if (filteredUsers.isEmpty) {
@@ -80,7 +83,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         leading: CircleAvatar(
                           backgroundColor: _getRoleColor(user.role),
                           child: Text(
-                            user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                            user.name.isNotEmpty
+                                ? user.name[0].toUpperCase()
+                                : 'U',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -166,18 +171,23 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         trailing: isCurrentUser
                             ? const Icon(Icons.person, color: Colors.blue)
                             : PopupMenuButton<String>(
-                                onSelected: (value) => _handleUserAction(value, user),
+                                onSelected: (value) =>
+                                    _handleUserAction(value, user),
                                 itemBuilder: (context) => [
                                   PopupMenuItem(
                                     value: 'toggle_status',
                                     child: Row(
                                       children: [
                                         Icon(
-                                          user.isActive ? Icons.block : Icons.check_circle,
+                                          user.isActive
+                                              ? Icons.block
+                                              : Icons.check_circle,
                                           size: 20,
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(user.isActive ? 'Desativar' : 'Ativar'),
+                                        Text(user.isActive
+                                            ? 'Desativar'
+                                            : 'Ativar'),
                                       ],
                                     ),
                                   ),
@@ -185,7 +195,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                     value: 'change_role',
                                     child: Row(
                                       children: [
-                                        Icon(Icons.admin_panel_settings, size: 20),
+                                        Icon(Icons.admin_panel_settings,
+                                            size: 20),
                                         SizedBox(width: 8),
                                         Text('Alterar Função'),
                                       ],
@@ -231,7 +242,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddUserDialog(),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: const Color(0xFFD32F2F),
         child: const Icon(Icons.person_add, color: Colors.white),
       ),
     );
@@ -331,11 +342,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final authNotifier = ref.read(authNotifierProvider.notifier);
     await authNotifier.updateUserRole(user.id, newRole);
     ref.refresh(usersListProvider);
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Função de ${user.name} alterada para ${newRole.displayName}'),
+          content: Text(
+              'Função de ${user.name} alterada para ${newRole.displayName}'),
           backgroundColor: Colors.green,
         ),
       );
@@ -366,7 +378,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     if (confirmed == true) {
       final authNotifier = ref.read(authNotifierProvider.notifier);
       await authNotifier.resetPassword(user.email);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -400,7 +412,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 TextFormField(
                   controller: nameController,
                   decoration: const InputDecoration(labelText: 'Nome'),
-                  validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                  validator: (value) =>
+                      value?.isEmpty == true ? 'Campo obrigatório' : null,
                 ),
                 TextFormField(
                   controller: emailController,
@@ -408,7 +421,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value?.isEmpty == true) return 'Campo obrigatório';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(value!)) {
                       return 'Email inválido';
                     }
                     return null;
@@ -426,11 +440,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 ),
                 TextFormField(
                   controller: departmentController,
-                  decoration: const InputDecoration(labelText: 'Departamento (opcional)'),
+                  decoration: const InputDecoration(
+                      labelText: 'Departamento (opcional)'),
                 ),
                 TextFormField(
                   controller: phoneController,
-                  decoration: const InputDecoration(labelText: 'Telefone (opcional)'),
+                  decoration:
+                      const InputDecoration(labelText: 'Telefone (opcional)'),
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 16),
@@ -460,21 +476,23 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 Navigator.of(context).pop();
-                
+
                 final authNotifier = ref.read(authNotifierProvider.notifier);
                 await authNotifier.register(
                   email: emailController.text.trim(),
                   password: passwordController.text,
                   name: nameController.text.trim(),
                   role: selectedRole,
-                  department: departmentController.text.trim().isEmpty 
-                    ? null : departmentController.text.trim(),
-                  phone: phoneController.text.trim().isEmpty 
-                    ? null : phoneController.text.trim(),
+                  department: departmentController.text.trim().isEmpty
+                      ? null
+                      : departmentController.text.trim(),
+                  phone: phoneController.text.trim().isEmpty
+                      ? null
+                      : phoneController.text.trim(),
                 );
-                
+
                 ref.refresh(usersListProvider);
-                
+
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

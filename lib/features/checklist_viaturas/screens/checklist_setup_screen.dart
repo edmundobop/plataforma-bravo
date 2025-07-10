@@ -9,19 +9,21 @@ import 'checklist_screen.dart';
 
 class ChecklistSetupScreen extends ConsumerStatefulWidget {
   final Vehicle vehicle;
-  
+
   const ChecklistSetupScreen({
     super.key,
     required this.vehicle,
   });
 
   @override
-  ConsumerState<ChecklistSetupScreen> createState() => _ChecklistSetupScreenState();
+  ConsumerState<ChecklistSetupScreen> createState() =>
+      _ChecklistSetupScreenState();
 }
 
 class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
   String _selectedAla = 'Alpha';
-  final DateTime _currentDateTime = DateTime.now(); // Data/hora fixa (não editável)
+  final DateTime _currentDateTime =
+      DateTime.now(); // Data/hora fixa (não editável)
 
   final List<String> _alas = [
     'Alpha',
@@ -48,8 +50,7 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
   void _startChecklist() {
     // Criar as categorias baseadas no tipo de veículo
     final categories = ChecklistData.getCategoriesForVehicleType(
-      _getVehicleTypeDisplayName(widget.vehicle.type)
-    );
+        _getVehicleTypeDisplayName(widget.vehicle.type));
 
     // Criar o checklist
     final checklist = VehicleChecklist(
@@ -57,9 +58,11 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
       vehicleId: widget.vehicle.id ?? '',
       vehicleType: _getVehicleTypeDisplayName(widget.vehicle.type),
       vehiclePlate: widget.vehicle.licensePlate,
-      responsibleName: 'Usuário Atual', // TODO: Pegar do contexto de autenticação
+      responsibleName:
+          'Usuário Atual', // TODO: Pegar do contexto de autenticação
       responsibleRank: 'Soldado', // TODO: Pegar do contexto de autenticação
-      responsibleRegistration: '123456', // TODO: Pegar do contexto de autenticação
+      responsibleRegistration:
+          '123456', // TODO: Pegar do contexto de autenticação
       date: _currentDateTime,
       categories: categories,
     );
@@ -179,7 +182,8 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
                         const SizedBox(height: 6),
 
                         // Tipo da Viatura
-                        _buildInfoRow('Tipo:', _getVehicleTypeDisplayName(widget.vehicle.type)),
+                        _buildInfoRow('Tipo:',
+                            _getVehicleTypeDisplayName(widget.vehicle.type)),
                         const SizedBox(height: 6),
 
                         // Placa
@@ -236,10 +240,10 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
                           decoration: BoxDecoration(
                             border: Border.all(color: AppColors.borderColor),
                             borderRadius: BorderRadius.circular(8),
@@ -248,7 +252,8 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
                             child: DropdownButton<String>(
                               value: _selectedAla,
                               isExpanded: true,
-                              icon: const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                              icon: const Icon(Icons.arrow_drop_down,
+                                  color: AppColors.textSecondary),
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: AppColors.textPrimary,
@@ -260,7 +265,8 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
                                   });
                                 }
                               },
-                              items: _alas.map<DropdownMenuItem<String>>((String value) {
+                              items: _alas.map<DropdownMenuItem<String>>(
+                                  (String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
                                   child: Text(value),
@@ -334,7 +340,8 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                DateFormat('dd/MM/yyyy - HH:mm').format(_currentDateTime),
+                                DateFormat('dd/MM/yyyy - HH:mm')
+                                    .format(_currentDateTime),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: AppColors.textPrimary,
@@ -343,7 +350,8 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
                               ),
                               const Spacer(),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: AppColors.primaryRed.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(4),

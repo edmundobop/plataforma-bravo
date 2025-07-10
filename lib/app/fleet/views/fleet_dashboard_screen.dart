@@ -9,7 +9,8 @@ class FleetDashboardScreen extends ConsumerStatefulWidget {
   const FleetDashboardScreen({super.key});
 
   @override
-  ConsumerState<FleetDashboardScreen> createState() => _FleetDashboardScreenState();
+  ConsumerState<FleetDashboardScreen> createState() =>
+      _FleetDashboardScreenState();
 }
 
 class _FleetDashboardScreenState extends ConsumerState<FleetDashboardScreen> {
@@ -27,7 +28,7 @@ class _FleetDashboardScreenState extends ConsumerState<FleetDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Checklist de Viaturas'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -45,6 +46,9 @@ class _FleetDashboardScreenState extends ConsumerState<FleetDashboardScreen> {
               });
             },
             labelType: NavigationRailLabelType.all,
+            backgroundColor: Colors.white,
+            selectedIconTheme: const IconThemeData(color: Color(0xFFD32F2F)),
+            selectedLabelTextStyle: const TextStyle(color: Color(0xFFD32F2F)),
             destinations: const [
               NavigationRailDestination(
                 icon: Icon(Icons.dashboard),
@@ -78,7 +82,7 @@ class _DashboardOverview extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard de Viaturas'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
@@ -125,7 +129,7 @@ class _VehicleListSection extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lista de Viaturas'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
@@ -155,7 +159,8 @@ class _VehicleListSection extends ConsumerWidget {
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ListTile(
                   leading: CircleAvatar(
-                    child: Text(vehicle.type.toString().split('.').last.toUpperCase()),
+                    child: Text(
+                        vehicle.type.toString().split('.').last.toUpperCase()),
                   ),
                   title: Text('${vehicle.name} - ${vehicle.licensePlate}'),
                   subtitle: Text('Modelo: ${vehicle.model} (${vehicle.year})'),
@@ -166,7 +171,8 @@ class _VehicleListSection extends ConsumerWidget {
                         onSelected: (value) async {
                           switch (value) {
                             case 'edit':
-                              context.push('/fleet/vehicle-registration', extra: vehicle);
+                              context.push('/fleet/vehicle-registration',
+                                  extra: vehicle);
                               break;
                             case 'delete':
                               _deleteVehicle(context, ref, vehicle);
@@ -175,7 +181,8 @@ class _VehicleListSection extends ConsumerWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ChecklistSetupScreen(vehicle: vehicle),
+                                  builder: (context) =>
+                                      ChecklistSetupScreen(vehicle: vehicle),
                                 ),
                               );
                               break;
@@ -202,7 +209,8 @@ class _VehicleListSection extends ConsumerWidget {
                               value: 'delete',
                               child: ListTile(
                                 leading: Icon(Icons.delete, color: Colors.red),
-                                title: Text('Excluir', style: TextStyle(color: Colors.red)),
+                                title: Text('Excluir',
+                                    style: TextStyle(color: Colors.red)),
                               ),
                             ),
                         ],
@@ -236,7 +244,8 @@ class _VehicleListSection extends ConsumerWidget {
                   onPressed: () {
                     context.push('/fleet/vehicle-registration');
                   },
-                  child: const Icon(Icons.add),
+                  backgroundColor: const Color(0xFFD32F2F),
+                  child: const Icon(Icons.add, color: Colors.white),
                 )
               : const SizedBox.shrink();
         },
@@ -249,7 +258,8 @@ class _VehicleListSection extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirmar Exclusão'),
-        content: Text('Tem certeza que deseja excluir a viatura "${vehicle.licensePlate}"?'),
+        content: Text(
+            'Tem certeza que deseja excluir a viatura "${vehicle.licensePlate}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -261,7 +271,7 @@ class _VehicleListSection extends ConsumerWidget {
               try {
                 final vehicleService = ref.read(vehicleServiceProvider);
                 await vehicleService.deleteVehicle(vehicle.id!);
-                
+
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -299,7 +309,7 @@ class _VehicleChecklistSection extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Checklists de Viaturas'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
@@ -329,23 +339,32 @@ class _VehicleChecklistSection extends ConsumerWidget {
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ListTile(
                   leading: CircleAvatar(
-                    child: Text(checklist.status.toString().split('.').last.toUpperCase().substring(0, 1)),
+                    child: Text(checklist.status
+                        .toString()
+                        .split('.')
+                        .last
+                        .toUpperCase()
+                        .substring(0, 1)),
                   ),
                   title: FutureBuilder<Vehicle?>(
-                    future: ref.watch(vehicleServiceProvider).getVehicleById(checklist.vehicleId),
+                    future: ref
+                        .watch(vehicleServiceProvider)
+                        .getVehicleById(checklist.vehicleId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Text('Carregando...');
                       } else if (snapshot.hasError) {
                         return Text('Erro: ${snapshot.error}');
                       } else if (snapshot.hasData && snapshot.data != null) {
-                        return Text('${snapshot.data!.name} - ${snapshot.data!.licensePlate}');
+                        return Text(
+                            '${snapshot.data!.name} - ${snapshot.data!.licensePlate}');
                       } else {
                         return const Text('Viatura não encontrada');
                       }
                     },
                   ),
-                  subtitle: Text('Data: ${checklist.checklistDate.toLocal().toString().split(' ')[0]} - Status: ${checklist.status.toString().split('.').last}'),
+                  subtitle: Text(
+                      'Data: ${checklist.checklistDate.toLocal().toString().split(' ')[0]} - Status: ${checklist.status.toString().split('.').last}'),
                   onTap: () {
                     context.push('/fleet/checklist-details/${checklist.id}');
                   },

@@ -12,7 +12,7 @@ class StockMovementService {
       
       for (final movement in movements) {
         final docRef = _firestore.collection(_collection).doc();
-        batch.set(docRef, movement.toMap());
+        batch.set(docRef, movement.toFirestore());
       }
       
       await batch.commit();
@@ -25,7 +25,6 @@ class StockMovementService {
   Future<Map<String, dynamic>> getBasicStats() async {
     try {
       // Retorna dados estáticos para evitar consultas complexas
-      // Exemplo corrigido sem uso de toMap
       return {
         'totalMovements': 0,
         'entries': 0,
@@ -33,6 +32,85 @@ class StockMovementService {
       };
     } catch (e) {
       throw Exception('Erro ao obter estatísticas: $e');
+    }
+  }
+
+  // NOVA IMPLEMENTAÇÃO: Consulta simples para movimentações recentes
+  // Esta consulta usa apenas orderBy('createdAt') - SEM ÍNDICE COMPOSTO
+  Stream<List<StockMovement>> getRecentMovementsStream({int limit = 10}) {
+    try {
+      return _firestore
+          .collection(_collection)
+          .orderBy('createdAt', descending: true) // Apenas ordenação por data
+          .limit(limit) // Limitar resultados para performance
+          .snapshots()
+          .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          final data = doc.data();
+          return StockMovement.fromFirestore(data, doc.id);
+        }).toList();
+      });
+    } catch (e) {
+      throw Exception('Erro ao obter movimentações recentes: $e');
+    }
+  }
+
+  // Consulta simples para movimentações de um usuário específico
+  // Esta consulta usa apenas where('userId') - SEM ÍNDICE COMPOSTO
+  Stream<List<StockMovement>> getUserMovementsStream(String userId, {int limit = 20}) {
+    try {
+      return _firestore
+          .collection(_collection)
+          .where('userId', isEqualTo: userId) // Apenas filtro por usuário
+          .limit(limit)
+          .snapshots()
+          .map((snapshot) {
+        final movements = snapshot.docs.map((doc) {
+          final data = doc.data();
+          return StockMovement.fromFirestore(data, doc.id);
+        }).toList();
+        
+        // Ordenar no cliente para evitar índice composto
+        movements.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return movements;
+      });
+    } catch (e) {
+      throw Exception('Erro ao obter movimentações do usuário: $e');
+    }
+  }
+
+  // Método para obter estatísticas reais (consulta simples)
+  Future<Map<String, dynamic>> getRealStats() async {
+    try {
+      // Consulta simples para contar documentos
+      final snapshot = await _firestore
+          .collection(_collection)
+          .limit(100) // Limitar para performance
+          .get();
+
+      final movements = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return StockMovement.fromFirestore(data, doc.id);
+      }).toList();
+
+      final totalMovements = movements.length;
+      final entries = movements.where((m) => m.type.toString().split('.').last == 'entry').length;
+      final exits = movements.where((m) => m.type.toString().split('.').last == 'exit').length;
+
+      return {
+        'totalMovements': totalMovements,
+        'entries': entries,
+        'exits': exits,
+        'lastUpdate': DateTime.now().toIso8601String(),
+      };
+    } catch (e) {
+      // Em caso de erro, retorna dados básicos
+      return {
+        'totalMovements': 0,
+        'entries': 0,
+        'exits': 0,
+        'error': e.toString(),
+      };
     }
   }
 }

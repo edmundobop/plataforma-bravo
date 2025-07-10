@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/models/models.dart';
 import '../../../core/providers/providers.dart';
+import '../../../core/widgets/recent_movements_widget.dart';
 
 class StockDashboardScreen extends ConsumerWidget {
   const StockDashboardScreen({super.key});
@@ -31,7 +32,7 @@ class StockDashboardScreen extends ConsumerWidget {
           Container(
             margin: const EdgeInsets.only(right: 16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
@@ -61,7 +62,7 @@ class StockDashboardScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.red.withOpacity(0.3),
+                      color: Colors.red.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -72,7 +73,7 @@ class StockDashboardScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -99,7 +100,7 @@ class StockDashboardScreen extends ConsumerWidget {
                             'Controle completo do seu estoque',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                         ],
@@ -108,13 +109,13 @@ class StockDashboardScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
-              // Overview das estatísticas
+              // Dashboard Overview
               _DashboardOverview(products: products),
               const SizedBox(height: 32),
 
-              // Ações rápidas
+              // Ações Rápidas
               Row(
                 children: [
                   const Icon(
@@ -142,7 +143,7 @@ class StockDashboardScreen extends ConsumerWidget {
                       subtitle: 'Entrada e saída',
                       icon: Icons.swap_horiz,
                       color: Colors.blue,
-                      onTap: () => context.go('/stock/movement'),
+                      onTap: () => context.go('/stock/movements'),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -152,7 +153,7 @@ class StockDashboardScreen extends ConsumerWidget {
                       subtitle: 'Cadastrar item',
                       icon: Icons.add_box,
                       color: Colors.green,
-                      onTap: () => context.go('/stock/product-registration'),
+                      onTap: () => context.go('/stock/products/new'),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -169,48 +170,29 @@ class StockDashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 32),
 
-              // Informação sobre funcionalidades disponíveis
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      color: Colors.green[600],
-                      size: 24,
+              // Título das Movimentações Recentes
+              Row(
+                children: [
+                  const Icon(
+                    Icons.history,
+                    color: Colors.orange,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Movimentações Recentes',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Sistema Funcionando',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green[800],
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Todas as funcionalidades de gestão de estoque estão disponíveis através das ações rápidas acima.',
-                            style: TextStyle(
-                              color: Colors.green[700],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 16),
+
+              // Widget de Movimentações Recentes
+              const RecentMovementsWidget(),
             ],
           ),
         ),
@@ -264,9 +246,12 @@ class _DashboardOverview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final totalProducts = products.length;
-    final lowStockProducts = products.where((p) => p.currentStock <= p.minStock).length;
-    final criticalStockProducts = products.where((p) => p.currentStock == 0).length;
-    final totalValue = products.fold<double>(0, (sum, product) => sum + (product.currentStock * 10.0));
+    final lowStockProducts =
+        products.where((p) => p.currentStock <= p.minStock).length;
+    final criticalStockProducts =
+        products.where((p) => p.currentStock == 0).length;
+    final totalValue = products.fold<double>(
+        0, (sum, product) => sum + (product.currentStock * 10.0));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,15 +345,11 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,7 +359,7 @@ class _StatCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -390,7 +371,7 @@ class _StatCard extends StatelessWidget {
               const Spacer(),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             value,
             style: TextStyle(
@@ -430,60 +411,50 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 1,
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
         ),
       ),
     );

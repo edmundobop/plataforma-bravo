@@ -10,10 +10,12 @@ class VehicleRegistrationScreen extends ConsumerStatefulWidget {
   const VehicleRegistrationScreen({super.key, this.vehicle});
 
   @override
-  ConsumerState<VehicleRegistrationScreen> createState() => _VehicleRegistrationScreenState();
+  ConsumerState<VehicleRegistrationScreen> createState() =>
+      _VehicleRegistrationScreenState();
 }
 
-class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationScreen> {
+class _VehicleRegistrationScreenState
+    extends ConsumerState<VehicleRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _licensePlateController = TextEditingController();
@@ -139,7 +141,7 @@ class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationS
           onPressed: () => context.pop(),
         ),
         title: Text(isEditing ? 'Editar Viatura' : 'Cadastrar Viatura'),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
       ),
       body: Form(
@@ -169,7 +171,8 @@ class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationS
                         items: VehicleType.values.map((type) {
                           return DropdownMenuItem(
                             value: type,
-                            child: Text(type.toString().split('.').last.toUpperCase()),
+                            child: Text(
+                                type.toString().split('.').last.toUpperCase()),
                           );
                         }).toList(),
                         onChanged: (value) {
@@ -199,6 +202,7 @@ class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationS
                           return null;
                         },
                       ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _licensePlateController,
                         decoration: const InputDecoration(
@@ -311,13 +315,21 @@ class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationS
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _isLoading ? null : () => context.pop(),
-                      child: const Text('Cancelar'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFD32F2F)),
+                      ),
+                      child: const Text('Cancelar',
+                          style: TextStyle(color: Color(0xFFD32F2F))),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _submitVehicle,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD32F2F),
+                        foregroundColor: Colors.white,
+                      ),
                       child: _isLoading
                           ? const SizedBox(
                               height: 20,
