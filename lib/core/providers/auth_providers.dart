@@ -75,6 +75,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     required UserRole role,
     String? department,
     String? phone,
+    List<String>? unitIds,
+    String? currentUnitId,
+    bool isGlobalAdmin = false,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -85,6 +88,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
         role: role,
         department: department,
         phone: phone,
+        unitIds: unitIds,
+        currentUnitId: currentUnitId,
+        isGlobalAdmin: isGlobalAdmin,
       );
       state = const AsyncValue.data(null);
     } catch (e, stackTrace) {
@@ -146,6 +152,87 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
       state = AsyncValue.error(e, stackTrace);
     }
   }
+
+  // Atualizar unidade atual do usuário
+  Future<void> updateUserCurrentUnit(String uid, String unitId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _authService.updateUserCurrentUnit(uid, unitId);
+      state = const AsyncValue.data(null);
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
+  // Adicionar unidade ao usuário
+  Future<void> addUserUnit(String uid, String unitId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _authService.addUserUnit(uid, unitId);
+      state = const AsyncValue.data(null);
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
+  // Remover unidade do usuário
+  Future<void> removeUserUnit(String uid, String unitId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _authService.removeUserUnit(uid, unitId);
+      state = const AsyncValue.data(null);
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
+  // Definir usuário como admin global
+  Future<void> setGlobalAdmin(String uid, bool isGlobalAdmin) async {
+    state = const AsyncValue.loading();
+    try {
+      await _authService.setGlobalAdmin(uid, isGlobalAdmin);
+      state = const AsyncValue.data(null);
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
+  // Atualizar dados específicos do perfil do usuário
+  Future<void> updateUserProfile(Map<String, dynamic> data) async {
+    state = const AsyncValue.loading();
+    try {
+      final currentUser = _authService.currentUser;
+      if (currentUser != null) {
+        await _authService.updateUserProfileData(currentUser.uid, data);
+      }
+      state = const AsyncValue.data(null);
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
+  // Criar usuário (método para compatibilidade com user management)
+  Future<void> createUser({
+    required String email,
+    required String password,
+    required String name,
+    required UserRole role,
+    String? department,
+    String? phone,
+    List<String>? unitIds,
+    bool isGlobalAdmin = false,
+  }) async {
+    await register(
+      email: email,
+      password: password,
+      name: name,
+      role: role,
+      department: department,
+      phone: phone,
+      unitIds: unitIds,
+      isGlobalAdmin: isGlobalAdmin,
+    );
+  }
 }
 
 // Provider do notifier de autenticação
@@ -153,3 +240,6 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AsyncValue<void
   final authService = ref.watch(authServiceProvider);
   return AuthNotifier(authService);
 });
+
+// Alias para compatibilidade com user management
+final userManagementProvider = authNotifierProvider;

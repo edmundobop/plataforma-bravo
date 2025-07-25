@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_providers.dart';
+import '../../../core/providers/fire_unit_providers.dart';
+import '../../../core/widgets/unit_selector.dart';
 import '../../../features/checklist_viaturas/utils/app_colors.dart';
 import '../widgets/welcome_widget.dart';
 
@@ -12,6 +14,12 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(currentUserProvider);
     final isAdmin = ref.watch(isAdminProvider);
+    
+    // Inicializar o listener de mudanças de unidade
+    ref.watch(unitChangeListenerProvider);
+    
+    // Inicializar a seleção automática de unidade
+    ref.watch(unitSelectionProvider);
 
     return Scaffold(
       body: Container(
@@ -20,7 +28,7 @@ class HomeScreen extends ConsumerWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppColors.primaryRed,
+              Color.fromRGBO(211, 47, 47, 1),
               AppColors.darkRed,
             ],
           ),
@@ -37,15 +45,15 @@ class HomeScreen extends ConsumerWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          width: 48,
+                          height: 48,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.local_fire_department,
-                            color: Colors.white,
-                            size: 32,
+                            image: const DecorationImage(
+                              image: AssetImage('assets/images/logo.jpg'),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -130,6 +138,23 @@ class HomeScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+              // Seletor de Unidade
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: const UnitSelector(
+                  showLabel: false,
+                  compact: false,
+                ),
+              ),
               // Conteúdo principal
               Expanded(
                 child: Container(
@@ -198,8 +223,8 @@ class HomeScreen extends ConsumerWidget {
                                     _buildModernMenuCard(
                                       context,
                                       icon: Icons.business_center,
-                                      title: 'Serviços\nTerceirizados',
-                                      subtitle: 'Gestão de contratos',
+                                      title: 'Gestão\nOperacional',
+                                      subtitle: 'SOP - Sessão Operacional',
                                       color: const Color(0xFF7B1FA2),
                                       onTap: () =>
                                           context.go('/trade-services'),
@@ -242,57 +267,71 @@ class HomeScreen extends ConsumerWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primaryRed.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.person,
-                color: AppColors.primaryRed,
-                size: 24,
-              ),
+      builder: (context) => Consumer(
+        builder: (context, ref, child) {
+          final currentUnit = ref.watch(currentUnitProvider);
+          
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(width: 12),
-            const Text(
-              'Meu Perfil',
-              style: TextStyle(
-                color: AppColors.darkRed,
-                fontWeight: FontWeight.bold,
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryRed.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    color: AppColors.primaryRed,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Meu Perfil',
+                  style: TextStyle(
+                    color: AppColors.darkRed,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProfileInfo('Nome', currentUser.name),
+                const SizedBox(height: 12),
+                _buildProfileInfo('Email', currentUser.email),
+                const SizedBox(height: 12),
+                _buildProfileInfo(
+                    'Cargo', currentUser.role.toString().split('.').last),
+                const SizedBox(height: 12),
+                _buildProfileInfo(
+                  'Unidade', 
+                  currentUnit?.name ?? 'Nenhuma unidade selecionada'
+                ),
+                if (currentUser.isGlobalAdmin) ...
+                  [
+                    const SizedBox(height: 12),
+                    _buildProfileInfo('Tipo', 'Administrador Global'),
+                  ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'Fechar',
+                  style: TextStyle(color: AppColors.primaryRed),
+                ),
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildProfileInfo('Nome', currentUser.name),
-            const SizedBox(height: 12),
-            _buildProfileInfo('Email', currentUser.email),
-            const SizedBox(height: 12),
-            _buildProfileInfo(
-                'Cargo', currentUser.role.toString().split('.').last),
-            const SizedBox(height: 12),
-            _buildProfileInfo('Unidade', 'CBM-GO'), // Valor fixo por enquanto
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'Fechar',
-              style: TextStyle(color: AppColors.primaryRed),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

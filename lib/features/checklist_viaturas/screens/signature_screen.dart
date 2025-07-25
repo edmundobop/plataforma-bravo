@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:signature/signature.dart';
 import '../models/vehicle_checklist.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/vehicle_checklist_providers.dart';
 import '../utils/app_colors.dart';
 
-class SignatureScreen extends StatefulWidget {
+class SignatureScreen extends ConsumerStatefulWidget {
   final VehicleChecklist checklist;
 
   const SignatureScreen({
@@ -12,10 +14,10 @@ class SignatureScreen extends StatefulWidget {
   });
 
   @override
-  State<SignatureScreen> createState() => _SignatureScreenState();
+  ConsumerState<SignatureScreen> createState() => _SignatureScreenState();
 }
 
-class _SignatureScreenState extends State<SignatureScreen> {
+class _SignatureScreenState extends ConsumerState<SignatureScreen> {
   final SignatureController _signatureController = SignatureController(
     penStrokeWidth: 2,
     penColor: Colors.black,
@@ -50,13 +52,14 @@ class _SignatureScreenState extends State<SignatureScreen> {
         updatedAt: DateTime.now(),
       );
 
-      // Aqui você pode salvar no Firebase ou banco de dados
-      // Por enquanto, apenas mostra uma mensagem de sucesso
+      // Salvar no Firebase usando o provider
+      final createChecklistFunction = ref.read(createVehicleChecklistProvider);
+      await createChecklistFunction(finalizedChecklist);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Checklist finalizado com sucesso!'),
+            content: Text('Checklist finalizado e salvo com sucesso!'),
             backgroundColor: AppColors.successGreen,
           ),
         );

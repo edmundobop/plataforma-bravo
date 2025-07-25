@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/models/user.dart';
 import '../../../features/checklist_viaturas/utils/app_colors.dart';
+import '../../../core/widgets/debug_login.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -168,76 +169,62 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo e Título Principal
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        // Ícone da Plataforma Bravo
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                  // Logo Principal
+                  Column(
+                    children: [
+                      Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
                           ),
-                          child: Icon(
-                            Icons.shield_outlined,
-                            size: 48,
-                            color: AppColors.primaryRed,
+                          image: const DecorationImage(
+                            image: AssetImage('assets/images/logo.jpg'),
+                            fit: BoxFit.cover,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        
-                        // Nome da Plataforma
-                        const Text(
-                          'PLATAFORMA',
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Título Principal
+                      if (!_isFirstUser) ...[  
+                        Text(
+                          'PLATAFORMA BRAVO',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 24,
-                            fontWeight: FontWeight.w300,
-                            letterSpacing: 4,
-                          ),
-                        ),
-                        const Text(
-                          'BRAVO',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
+                            letterSpacing: 1.2,
+                            shadows: [
+                              Shadow(
+                                offset: const Offset(0, 1),
+                                blurRadius: 3.0,
+                                color: Colors.black.withOpacity(0.3),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 8),
-                        
-                        // Subtítulo
-                        Text(
-                          _isFirstUser 
-                            ? 'Configuração Inicial'
-                            : 'Sistema de Gestão CBM-GO',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
                       ],
-                    ),
+                      
+                      // Subtítulo
+                      Text(
+                        _isFirstUser 
+                          ? 'Configuração Inicial'
+                          : 'Sistema de Gestão CBM-GO',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
                   
                   const SizedBox(height: 32),
@@ -249,9 +236,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Form(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.grey.shade100,
+                            Colors.grey.shade200,
+                          ],
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Form(
                         key: _formKey,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -413,7 +412,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ),
                             
-                            if (_isFirstUser) ...[
+                            if (_isFirstUser) ...[  
                               const SizedBox(height: 16),
                               Container(
                                 padding: const EdgeInsets.all(12),
@@ -448,6 +447,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
+                ),
                   
                   const SizedBox(height: 24),
                   
@@ -468,6 +468,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       fontSize: 12,
                     ),
                   ),
+                  
+                  // Widget de Debug para facilitar testes
+                  const SizedBox(height: 24),
+                  const DebugLogin(),
                 ],
               ),
             ),

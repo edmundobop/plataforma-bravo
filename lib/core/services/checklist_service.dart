@@ -5,63 +5,95 @@ class ChecklistService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'checklists';
 
-  // Create Checklist
+  // Criar checklist (com validação de unidade)
   Future<void> createChecklist(Checklist checklist) async {
     try {
+      // Validar se unitId está presente
+      if (checklist.unitId.isEmpty) {
+        throw Exception('ID da unidade é obrigatório');
+      }
       await _firestore.collection(_collection).add(checklist.toFirestore());
     } catch (e) {
-      throw Exception('Error creating checklist: $e');
+      throw Exception('Erro ao criar checklist: $e');
     }
   }
 
-  // Get all checklists
-  Stream<List<Checklist>> getChecklists() {
-    return _firestore.collection(_collection).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Checklist.fromFirestore(doc.data(), doc.id)).toList();
+  // Obter todos os checklists (filtrado por unidade)
+  Stream<List<Checklist>> getChecklists({String? unitId}) {
+    Query query = _firestore.collection(_collection);
+    
+    // Filtrar por unidade se especificado
+    if (unitId != null && unitId.isNotEmpty) {
+      query = query.where('unitId', isEqualTo: unitId);
+    }
+    
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Checklist.fromFirestore(data, doc.id);
+      }).toList();
     });
   }
 
-  // Get checklists by vehicle ID
-  Stream<List<Checklist>> getChecklistsByVehicleId(String vehicleId) {
-    return _firestore
+  // Obter checklists por veículo (filtrado por unidade)
+  Stream<List<Checklist>> getChecklistsByVehicleId(String vehicleId, {String? unitId}) {
+    Query query = _firestore
         .collection(_collection)
-        .where('vehicleId', isEqualTo: vehicleId)
+        .where('vehicleId', isEqualTo: vehicleId);
+    
+    // Filtrar por unidade se especificado
+    if (unitId != null && unitId.isNotEmpty) {
+      query = query.where('unitId', isEqualTo: unitId);
+    }
+    
+    return query
         .orderBy('checklistDate', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => Checklist.fromFirestore(doc.data(), doc.id)).toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Checklist.fromFirestore(data, doc.id);
+      }).toList();
     });
   }
 
-  // Get a single checklist by ID
-  Future<Checklist?> getChecklistById(String id) async {
+  // Buscar checklist por ID (com verificação de unidade)
+  Future<Checklist?> getChecklistById(String id, {String? unitId}) async {
     try {
       final doc = await _firestore.collection(_collection).doc(id).get();
       if (doc.exists) {
-        return Checklist.fromFirestore(doc.data()!, doc.id);
+        final data = doc.data()!;
+        final checklist = Checklist.fromFirestore(data, doc.id);
+        
+        // Verificar se o checklist pertence à unidade especificada
+        if (unitId != null && checklist.unitId != unitId) {
+          return null; // Checklist não pertence à unidade
+        }
+        
+        return checklist;
       } else {
         return null;
       }
     } catch (e) {
-      throw Exception('Error getting checklist by ID: $e');
+      throw Exception('Erro ao buscar checklist: $e');
     }
   }
 
-  // Update Checklist
+  // Atualizar checklist
   Future<void> updateChecklist(Checklist checklist) async {
     try {
       await _firestore.collection(_collection).doc(checklist.id).update(checklist.toFirestore());
     } catch (e) {
-      throw Exception('Error updating checklist: $e');
+      throw Exception('Erro ao atualizar checklist: $e');
     }
   }
 
-  // Delete Checklist
+  // Deletar checklist
   Future<void> deleteChecklist(String id) async {
     try {
       await _firestore.collection(_collection).doc(id).delete();
     } catch (e) {
-      throw Exception('Error deleting checklist: $e');
+      throw Exception('Erro ao deletar checklist: $e');
     }
   }
 }

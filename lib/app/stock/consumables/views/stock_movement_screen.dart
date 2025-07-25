@@ -162,6 +162,27 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
       return;
     }
 
+    final currentUnitId = ref.read(currentUnitIdProvider);
+    if (currentUnitId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Nenhuma unidade selecionada'),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+      return;
+    }
+
     final movement = StockMovement(
       productId: selectedProduct.id!,
       productName: selectedProduct.name,
@@ -173,6 +194,7 @@ class _StockMovementScreenState extends ConsumerState<StockMovementScreen> {
           : _observationController.text.trim(),
       createdAt: DateTime.now(),
       userId: currentUser.id,
+      unitId: currentUnitId,
     );
 
     setState(() {

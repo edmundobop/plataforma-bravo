@@ -12,7 +12,7 @@ class TradeServicesScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.go('/'),
         ),
-        title: const Text('Serviços Terceirizados'),
+        title: const Text('Gestão Operacional'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
       ),
@@ -27,7 +27,7 @@ class TradeServicesScreen extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Text(
-              'Módulo de Serviços Terceirizados',
+              'Módulo de Gestão Operacional',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,

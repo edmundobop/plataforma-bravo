@@ -27,6 +27,7 @@ class Vehicle {
   final String? observation;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String unitId; // Campo para isolamento multi-tenant
 
   Vehicle({
     this.id,
@@ -39,6 +40,7 @@ class Vehicle {
     this.observation,
     required this.createdAt,
     required this.updatedAt,
+    required this.unitId,
   });
 
   // Convert to Map for saving to Firestore
@@ -53,6 +55,7 @@ class Vehicle {
       'observation': observation,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'unitId': unitId,
     };
   }
 
@@ -75,6 +78,7 @@ class Vehicle {
       observation: data['observation'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      unitId: data['unitId'] ?? '',
     );
   }
 
@@ -90,6 +94,7 @@ class Vehicle {
     String? observation,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? unitId,
   }) {
     return Vehicle(
       id: id ?? this.id,
@@ -102,6 +107,7 @@ class Vehicle {
       observation: observation ?? this.observation,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      unitId: unitId ?? this.unitId,
     );
   }
 

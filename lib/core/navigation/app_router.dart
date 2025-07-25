@@ -124,17 +124,93 @@ final routerProvider = Provider<GoRouter>((ref) {
 class AppRouter extends ConsumerWidget {
   const AppRouter({super.key});
 
+  static GoRouter get router => _router;
+  
+  static final GoRouter _router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      // Rota de login
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+
+      // Rotas principais (protegidas)
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/inspections',
+        builder: (context, state) => const InspectionsScreen(),
+      ),
+      GoRoute(
+        path: '/stock',
+        builder: (context, state) => const StockDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'product-registration',
+            builder: (context, state) {
+              final product = state.extra as Product?;
+              return ProductRegistrationScreen(product: product);
+            },
+          ),
+          GoRoute(
+            path: 'products',
+            builder: (context, state) => const ProductListScreen(),
+          ),
+          GoRoute(
+            path: 'movement',
+            builder: (context, state) => const StockMovementScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/fleet',
+        builder: (context, state) => const FleetDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'vehicle-registration',
+            builder: (context, state) {
+              final vehicle = state.extra as Vehicle?;
+              return VehicleRegistrationScreen(vehicle: vehicle);
+            },
+          ),
+          GoRoute(
+            path: 'checklist-form/:vehicleId',
+            builder: (context, state) => ChecklistFormScreen(
+              vehicleId: state.pathParameters['vehicleId']!,
+            ),
+          ),
+          GoRoute(
+            path: 'checklist-details/:checklistId',
+            builder: (context, state) => ChecklistDetailsScreen(
+              checklistId: state.pathParameters['checklistId']!,
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/trade-services',
+        builder: (context, state) => const TradeServicesScreen(),
+      ),
+      // Rota de perfil do usuário
+      // Esta rota pode ser acessada por qualquer usuário logado
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+
+      // Rota de gerenciamento de usuários (apenas admin)
+      GoRoute(
+        path: '/users',
+        builder: (context, state) => const UserManagementScreen(),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(routerProvider);
-
-    return MaterialApp.router(
-      title: 'Gestão CBM-GO',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      routerConfig: router,
-    );
+    return const SizedBox(); // Placeholder, não usado mais
   }
 }

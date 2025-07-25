@@ -5,12 +5,29 @@ class StockMovementService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'stock_movements';
 
+  // Criar movimentação (com validação de unidade)
+  Future<void> createMovement(StockMovement movement) async {
+    try {
+      // Validar se unitId está presente
+      if (movement.unitId.isEmpty) {
+        throw Exception('ID da unidade é obrigatório');
+      }
+      await _firestore.collection(_collection).add(movement.toFirestore());
+    } catch (e) {
+      throw Exception('Erro ao criar movimentação: $e');
+    }
+  }
+
   // Criar múltiplas movimentações em lote (SEM CONSULTAS AUTOMÁTICAS)
   Future<void> createMovementsBatch(List<StockMovement> movements) async {
     try {
       final batch = _firestore.batch();
       
       for (final movement in movements) {
+        // Validar se unitId está presente
+        if (movement.unitId.isEmpty) {
+          throw Exception('ID da unidade é obrigatório para todas as movimentações');
+        }
         final docRef = _firestore.collection(_collection).doc();
         batch.set(docRef, movement.toFirestore());
       }
@@ -18,6 +35,28 @@ class StockMovementService {
       await batch.commit();
     } catch (e) {
       throw Exception('Erro ao criar movimentações em lote: $e');
+    }
+  }
+
+  // Buscar movimentação por ID (com verificação de unidade)
+  Future<StockMovement?> getMovementById(String id, {String? unitId}) async {
+    try {
+      final doc = await _firestore.collection(_collection).doc(id).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        final movement = StockMovement.fromFirestore(data, doc.id);
+        
+        // Verificar se a movimentação pertence à unidade especificada
+        if (unitId != null && movement.unitId != unitId) {
+          return null; // Movimentação não pertence à unidade
+        }
+        
+        return movement;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      throw Exception('Erro ao buscar movimentação: $e');
     }
   }
 
@@ -35,18 +74,23 @@ class StockMovementService {
     }
   }
 
-  // NOVA IMPLEMENTAÇÃO: Consulta simples para movimentações recentes
-  // Esta consulta usa apenas orderBy('createdAt') - SEM ÍNDICE COMPOSTO
-  Stream<List<StockMovement>> getRecentMovementsStream({int limit = 10}) {
+  // Obter movimentações recentes (filtrado por unidade)
+  Stream<List<StockMovement>> getRecentMovementsStream({String? unitId, int limit = 10}) {
     try {
-      return _firestore
-          .collection(_collection)
-          .orderBy('createdAt', descending: true) // Apenas ordenação por data
-          .limit(limit) // Limitar resultados para performance
+      Query query = _firestore.collection(_collection);
+      
+      // Filtrar por unidade se especificado
+      if (unitId != null && unitId.isNotEmpty) {
+        query = query.where('unitId', isEqualTo: unitId);
+      }
+      
+      return query
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
           .snapshots()
           .map((snapshot) {
         return snapshot.docs.map((doc) {
-          final data = doc.data();
+          final data = doc.data() as Map<String, dynamic>;
           return StockMovement.fromFirestore(data, doc.id);
         }).toList();
       });
@@ -55,18 +99,22 @@ class StockMovementService {
     }
   }
 
-  // Consulta simples para movimentações de um usuário específico
-  // Esta consulta usa apenas where('userId') - SEM ÍNDICE COMPOSTO
-  Stream<List<StockMovement>> getUserMovementsStream(String userId, {int limit = 20}) {
+  // Obter movimentações do usuário (filtrado por unidade)
+  Stream<List<StockMovement>> getUserMovementsStream(String userId, {String? unitId, int limit = 20}) {
     try {
-      return _firestore
-          .collection(_collection)
-          .where('userId', isEqualTo: userId) // Apenas filtro por usuário
+      Query query = _firestore.collection(_collection).where('userId', isEqualTo: userId);
+      
+      // Filtrar por unidade se especificado
+      if (unitId != null && unitId.isNotEmpty) {
+        query = query.where('unitId', isEqualTo: unitId);
+      }
+      
+      return query
           .limit(limit)
           .snapshots()
           .map((snapshot) {
         final movements = snapshot.docs.map((doc) {
-          final data = doc.data();
+          final data = doc.data() as Map<String, dynamic>;
           return StockMovement.fromFirestore(data, doc.id);
         }).toList();
         

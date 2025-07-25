@@ -47,6 +47,18 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Vehicle checklists collection rules
+    match /vehicle_checklists/{checklistId} {
+      // All authenticated users can create vehicle checklists
+      allow create: if request.auth != null;
+      // All authenticated users can read vehicle checklists
+      allow read: if request.auth != null;
+      // Users can update vehicle checklists (for completing them)
+      allow update: if request.auth != null;
+      // No one can delete vehicle checklists (for audit trail)
+      allow delete: if false;
+    }
+
     // Users collection rules
     match /users/{userId} {
       // Users can read their own data

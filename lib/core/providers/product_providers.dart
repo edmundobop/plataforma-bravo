@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../services/services.dart';
+import 'fire_unit_providers.dart';
 
 // Provider para o serviço de produtos
 final productServiceProvider = Provider<ProductService>((ref) {
@@ -10,13 +11,15 @@ final productServiceProvider = Provider<ProductService>((ref) {
 // Provider para stream de produtos
 final productsStreamProvider = StreamProvider<List<Product>>((ref) {
   final productService = ref.watch(productServiceProvider);
-  return productService.getProductsStream();
+  final currentUnitId = ref.watch(currentUnitIdProvider);
+  return productService.getProducts(unitId: currentUnitId);
 });
 
 // Provider para categorias
 final categoriesProvider = FutureProvider<List<String>>((ref) async {
   final productService = ref.watch(productServiceProvider);
-  return productService.getCategories();
+  final currentUnitId = ref.watch(currentUnitIdProvider);
+  return productService.getCategories(unitId: currentUnitId);
 });
 
 // Provider para query de busca

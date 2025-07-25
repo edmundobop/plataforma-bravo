@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/models/vehicle.dart';
 import '../../../core/providers/providers.dart';
+import '../../../core/providers/vehicle_checklist_providers.dart';
+import '../../../features/checklist_viaturas/models/vehicle_checklist.dart';
 import '../../../features/checklist_viaturas/screens/checklist_setup_screen.dart';
 
 class FleetDashboardScreen extends ConsumerStatefulWidget {
@@ -304,7 +306,7 @@ class _VehicleChecklistSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final checklistsAsync = ref.watch(checklistsStreamProvider);
+    final checklistsAsync = ref.watch(vehicleChecklistsStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -339,34 +341,48 @@ class _VehicleChecklistSection extends ConsumerWidget {
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ListTile(
                   leading: CircleAvatar(
-                    child: Text(checklist.status
-                        .toString()
-                        .split('.')
-                        .last
-                        .toUpperCase()
-                        .substring(0, 1)),
+                    backgroundColor: checklist.isCompleted 
+                        ? Colors.green 
+                        : Colors.orange,
+                    child: Icon(
+                      checklist.isCompleted 
+                          ? Icons.check 
+                          : Icons.pending,
+                      color: Colors.white,
+                    ),
                   ),
-                  title: FutureBuilder<Vehicle?>(
-                    future: ref
-                        .watch(vehicleServiceProvider)
-                        .getVehicleById(checklist.vehicleId),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Text('Carregando...');
-                      } else if (snapshot.hasError) {
-                        return Text('Erro: ${snapshot.error}');
-                      } else if (snapshot.hasData && snapshot.data != null) {
-                        return Text(
-                            '${snapshot.data!.name} - ${snapshot.data!.licensePlate}');
-                      } else {
-                        return const Text('Viatura não encontrada');
-                      }
-                    },
+                  title: Text(
+                    '${checklist.vehicleType} - ${checklist.vehiclePlate}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(
-                      'Data: ${checklist.checklistDate.toLocal().toString().split(' ')[0]} - Status: ${checklist.status.toString().split('.').last}'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Responsável: ${checklist.responsibleName}'),
+                      Text('Data: ${checklist.date.toLocal().toString().split(' ')[0]}'),
+                      Text(
+                        'Status: ${checklist.isCompleted ? "Finalizado" : "Pendente"}',
+                        style: TextStyle(
+                          color: checklist.isCompleted 
+                              ? Colors.green 
+                              : Colors.orange,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        'Progresso: ${checklist.completedItems}/${checklist.totalItems} itens (${checklist.overallCompletionPercentage.toStringAsFixed(1)}%)',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  isThreeLine: true,
                   onTap: () {
-                    context.push('/fleet/checklist-details/${checklist.id}');
+                    // TODO: Navegar para detalhes do checklist
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Visualização de detalhes em desenvolvimento'),
+                      ),
+                    );
                   },
                 ),
               );

@@ -12,6 +12,7 @@ class StockMovement {
   final String? observation;
   final DateTime createdAt;
   final String userId;
+  final String unitId; // Campo para isolamento multi-tenant
 
   StockMovement({
     this.id,
@@ -23,6 +24,7 @@ class StockMovement {
     this.observation,
     required this.createdAt,
     required this.userId,
+    required this.unitId,
   });
 
   // Converter para Map para salvar no Firestore
@@ -36,6 +38,7 @@ class StockMovement {
       'observation': observation,
       'createdAt': Timestamp.fromDate(createdAt),
       'userId': userId,
+      'unitId': unitId,
     };
   }
 
@@ -56,6 +59,7 @@ class StockMovement {
       observation: data['observation'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       userId: data['userId'] ?? '',
+      unitId: data['unitId'] ?? '',
     );
   }
 
@@ -70,6 +74,7 @@ class StockMovement {
     String? observation,
     DateTime? createdAt,
     String? userId,
+    String? unitId,
   }) {
     return StockMovement(
       id: id ?? this.id,
@@ -81,6 +86,7 @@ class StockMovement {
       observation: observation ?? this.observation,
       createdAt: createdAt ?? this.createdAt,
       userId: userId ?? this.userId,
+      unitId: unitId ?? this.unitId,
     );
   }
 

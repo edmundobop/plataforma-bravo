@@ -153,7 +153,7 @@ class StockDashboardScreen extends ConsumerWidget {
                       subtitle: 'Cadastrar item',
                       icon: Icons.add_box,
                       color: Colors.green,
-                      onTap: () => context.go('/stock/products/new'),
+                      onTap: () => context.go('/stock/product-registration'),
                     ),
                   ),
                   const SizedBox(width: 16),

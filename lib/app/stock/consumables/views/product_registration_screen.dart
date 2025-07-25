@@ -88,7 +88,13 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
 
     try {
       final productService = ref.read(productServiceProvider);
+      final currentUnitId = ref.read(currentUnitIdProvider);
       final now = DateTime.now();
+
+      // Verificar se uma unidade está selecionada
+      if (currentUnitId == null) {
+        throw Exception('Nenhuma unidade selecionada');
+      }
 
       final product = Product(
         id: widget.product?.id,
@@ -102,6 +108,7 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
         location: _locationController.text.trim(),
         createdAt: widget.product?.createdAt ?? now,
         updatedAt: now,
+        unitId: currentUnitId,
       );
 
       if (widget.product == null) {

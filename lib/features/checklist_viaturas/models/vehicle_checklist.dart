@@ -3,6 +3,7 @@ import 'checklist_category.dart';
 
 class VehicleChecklist {
   final String? id; // ID do documento no Firebase
+  final String unitId; // ID da unidade para isolamento multi-tenant
   final String vehicleType;
   final String vehicleId;
   final String vehiclePlate;
@@ -20,6 +21,7 @@ class VehicleChecklist {
 
   VehicleChecklist({
     this.id,
+    required this.unitId,
     required this.vehicleType,
     required this.vehicleId,
     required this.vehiclePlate,
@@ -49,6 +51,7 @@ class VehicleChecklist {
   // Método copyWith
   VehicleChecklist copyWith({
     String? id,
+    String? unitId,
     String? vehicleType,
     String? vehicleId,
     String? vehiclePlate,
@@ -66,6 +69,7 @@ class VehicleChecklist {
   }) {
     return VehicleChecklist(
       id: id ?? this.id,
+      unitId: unitId ?? this.unitId,
       vehicleType: vehicleType ?? this.vehicleType,
       vehicleId: vehicleId ?? this.vehicleId,
       vehiclePlate: vehiclePlate ?? this.vehiclePlate,
@@ -86,6 +90,7 @@ class VehicleChecklist {
   // Serialização para Firebase
   Map<String, dynamic> toMap() {
     return {
+      'unitId': unitId,
       'vehicleType': vehicleType,
       'vehicleId': vehicleId,
       'vehiclePlate': vehiclePlate,
@@ -109,6 +114,7 @@ class VehicleChecklist {
   factory VehicleChecklist.fromMap(Map<String, dynamic> map, String documentId) {
     return VehicleChecklist(
       id: documentId,
+      unitId: map['unitId'] ?? '',
       vehicleType: map['vehicleType'] ?? '',
       vehicleId: map['vehicleId'] ?? '',
       vehiclePlate: map['vehiclePlate'] ?? '',

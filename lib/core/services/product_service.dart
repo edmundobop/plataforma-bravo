@@ -5,14 +5,21 @@ class ProductService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'products';
 
-  // Buscar todos os produtos (SEM QUALQUER ORDENAÇÃO OU FILTRO)
-  Stream<List<Product>> getProducts() {
-    return _firestore
-        .collection(_collection)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Product.fromFirestore(doc.data(), doc.id))
-            .toList());
+  // Obter todos os produtos (filtrado por unidade)
+  Stream<List<Product>> getProducts({String? unitId}) {
+    Query query = _firestore.collection(_collection);
+    
+    // Filtrar por unidade se especificado
+    if (unitId != null && unitId.isNotEmpty) {
+      query = query.where('unitId', isEqualTo: unitId);
+    }
+    
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Product.fromFirestore(data, doc.id);
+      }).toList();
+    });
   }
 
   // Método alternativo para compatibilidade
@@ -20,22 +27,35 @@ class ProductService {
     return getProducts();
   }
 
-  // Buscar produto por ID
-  Future<Product?> getProductById(String id) async {
+  // Buscar produto por ID (com verificação de unidade)
+  Future<Product?> getProductById(String id, {String? unitId}) async {
     try {
       final doc = await _firestore.collection(_collection).doc(id).get();
       if (doc.exists) {
-        return Product.fromFirestore(doc.data()!, doc.id);
+        final data = doc.data()!;
+        final product = Product.fromFirestore(data, doc.id);
+        
+        // Verificar se o produto pertence à unidade especificada
+        if (unitId != null && product.unitId != unitId) {
+          return null; // Produto não pertence à unidade
+        }
+        
+        return product;
+      } else {
+        return null;
       }
-      return null;
     } catch (e) {
       throw Exception('Erro ao buscar produto: $e');
     }
   }
 
-  // Criar produto
+  // Criar produto (com validação de unidade)
   Future<void> createProduct(Product product) async {
     try {
+      // Validar se unitId está presente
+      if (product.unitId.isEmpty) {
+        throw Exception('ID da unidade é obrigatório');
+      }
       await _firestore.collection(_collection).add(product.toFirestore());
     } catch (e) {
       throw Exception('Erro ao criar produto: $e');
@@ -66,17 +86,40 @@ class ProductService {
     }
   }
 
-  // Buscar categorias (PROCESSAMENTO NO CLIENTE)
-  Future<List<String>> getCategories() async {
+  // Buscar categorias (filtrado por unidade)
+  Future<List<String>> getCategories({String? unitId}) async {
     try {
-      final snapshot = await _firestore.collection(_collection).get();
+      Query query = _firestore.collection(_collection);
+      
+      // Filtrar por unidade se especificado
+      if (unitId != null && unitId.isNotEmpty) {
+        query = query.where('unitId', isEqualTo: unitId);
+      }
+      
+      final snapshot = await query.get();
       final categories = <String>{};
       
       for (final doc in snapshot.docs) {
-        final data = doc.data();
+        final data = doc.data() as Map<String, dynamic>;
         if (data['category'] != null) {
           categories.add(data['category'] as String);
         }
+      }
+      
+      // Se não há categorias dos produtos existentes, adicionar categorias padrão
+      if (categories.isEmpty) {
+        categories.addAll([
+          'Material de Escritório',
+          'Equipamentos de Proteção',
+          'Ferramentas',
+          'Material de Limpeza',
+          'Equipamentos Eletrônicos',
+          'Material Médico',
+          'Combustível',
+          'Peças e Componentes',
+          'Material de Construção',
+          'Outros',
+        ]);
       }
       
       return categories.toList()..sort();
@@ -88,12 +131,19 @@ class ProductService {
   // TODOS OS MÉTODOS ABAIXO FAZEM PROCESSAMENTO NO CLIENTE
   // PARA EVITAR CONSULTAS COMPLEXAS NO FIRESTORE
 
-  // Buscar produtos por categoria (PROCESSAMENTO NO CLIENTE)
-  Future<List<Product>> getProductsByCategory(String category) async {
+  // Buscar produtos por categoria (filtrado por unidade)
+  Future<List<Product>> getProductsByCategory(String category, {String? unitId}) async {
     try {
-      final snapshot = await _firestore.collection(_collection).get();
+      Query query = _firestore.collection(_collection);
+      
+      // Filtrar por unidade se especificado
+      if (unitId != null && unitId.isNotEmpty) {
+        query = query.where('unitId', isEqualTo: unitId);
+      }
+      
+      final snapshot = await query.get();
       final products = snapshot.docs
-          .map((doc) => Product.fromFirestore(doc.data(), doc.id))
+          .map((doc) => Product.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .where((product) => product.category == category)
           .toList();
       
@@ -103,12 +153,19 @@ class ProductService {
     }
   }
 
-  // Buscar produtos com estoque baixo (PROCESSAMENTO NO CLIENTE)
-  Future<List<Product>> getLowStockProducts() async {
+  // Buscar produtos com estoque baixo (filtrado por unidade)
+  Future<List<Product>> getLowStockProducts({String? unitId}) async {
     try {
-      final snapshot = await _firestore.collection(_collection).get();
+      Query query = _firestore.collection(_collection);
+      
+      // Filtrar por unidade se especificado
+      if (unitId != null && unitId.isNotEmpty) {
+        query = query.where('unitId', isEqualTo: unitId);
+      }
+      
+      final snapshot = await query.get();
       final products = snapshot.docs
-          .map((doc) => Product.fromFirestore(doc.data(), doc.id))
+          .map((doc) => Product.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .where((product) => product.currentStock <= product.minStock)
           .toList();
       
@@ -118,12 +175,19 @@ class ProductService {
     }
   }
 
-  // Buscar produtos em estoque crítico (PROCESSAMENTO NO CLIENTE)
-  Future<List<Product>> getCriticalStockProducts() async {
+  // Buscar produtos em estoque crítico (filtrado por unidade)
+  Future<List<Product>> getCriticalStockProducts({String? unitId}) async {
     try {
-      final snapshot = await _firestore.collection(_collection).get();
+      Query query = _firestore.collection(_collection);
+      
+      // Filtrar por unidade se especificado
+      if (unitId != null && unitId.isNotEmpty) {
+        query = query.where('unitId', isEqualTo: unitId);
+      }
+      
+      final snapshot = await query.get();
       final products = snapshot.docs
-          .map((doc) => Product.fromFirestore(doc.data(), doc.id))
+          .map((doc) => Product.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .where((product) => product.currentStock == 0)
           .toList();
       
@@ -133,12 +197,19 @@ class ProductService {
     }
   }
 
-  // Buscar produtos por nome (PROCESSAMENTO NO CLIENTE)
-  Future<List<Product>> searchProductsByName(String name) async {
+  // Buscar produtos por nome (filtrado por unidade)
+  Future<List<Product>> searchProductsByName(String name, {String? unitId}) async {
     try {
-      final snapshot = await _firestore.collection(_collection).get();
+      Query query = _firestore.collection(_collection);
+      
+      // Filtrar por unidade se especificado
+      if (unitId != null && unitId.isNotEmpty) {
+        query = query.where('unitId', isEqualTo: unitId);
+      }
+      
+      final snapshot = await query.get();
       final products = snapshot.docs
-          .map((doc) => Product.fromFirestore(doc.data(), doc.id))
+          .map((doc) => Product.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .where((product) => 
               product.name.toLowerCase().contains(name.toLowerCase()))
           .toList();

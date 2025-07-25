@@ -12,6 +12,7 @@ class Product {
   final String location;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String unitId; // Campo para isolamento multi-tenant
 
   Product({
     this.id,
@@ -25,6 +26,7 @@ class Product {
     required this.location,
     required this.createdAt,
     required this.updatedAt,
+    required this.unitId,
   });
 
   // Converter para Map para salvar no Firestore
@@ -40,6 +42,7 @@ class Product {
       'location': location,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'unitId': unitId,
     };
   }
 
@@ -57,6 +60,7 @@ class Product {
       location: data['location'] ?? '',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      unitId: data['unitId'] ?? '',
     );
   }
 
@@ -73,6 +77,7 @@ class Product {
     String? location,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? unitId,
   }) {
     return Product(
       id: id ?? this.id,
@@ -86,6 +91,7 @@ class Product {
       location: location ?? this.location,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      unitId: unitId ?? this.unitId,
     );
   }
 

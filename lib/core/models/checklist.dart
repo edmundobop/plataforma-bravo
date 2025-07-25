@@ -47,6 +47,7 @@ class Checklist {
   final String? id;
   final String vehicleId;
   final String userId;
+  final String unitId;
   final DateTime checklistDate;
   final ChecklistStatus status;
   final String? generalObservations;
@@ -58,6 +59,7 @@ class Checklist {
     this.id,
     required this.vehicleId,
     required this.userId,
+    required this.unitId,
     required this.checklistDate,
     required this.status,
     this.generalObservations,
@@ -70,6 +72,7 @@ class Checklist {
     return {
       'vehicleId': vehicleId,
       'userId': userId,
+      'unitId': unitId,
       'checklistDate': Timestamp.fromDate(checklistDate),
       'status': status.toString().split('.').last,
       'generalObservations': generalObservations,
@@ -84,6 +87,7 @@ class Checklist {
       id: id,
       vehicleId: data['vehicleId'] ?? '',
       userId: data['userId'] ?? '',
+      unitId: data['unitId'] ?? '',
       checklistDate: (data['checklistDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: ChecklistStatus.values.firstWhere(
         (e) => e.toString().split('.').last == data['status'],
@@ -103,6 +107,7 @@ class Checklist {
     String? id,
     String? vehicleId,
     String? userId,
+    String? unitId,
     DateTime? checklistDate,
     ChecklistStatus? status,
     String? generalObservations,
@@ -114,6 +119,7 @@ class Checklist {
       id: id ?? this.id,
       vehicleId: vehicleId ?? this.vehicleId,
       userId: userId ?? this.userId,
+      unitId: unitId ?? this.unitId,
       checklistDate: checklistDate ?? this.checklistDate,
       status: status ?? this.status,
       generalObservations: generalObservations ?? this.generalObservations,

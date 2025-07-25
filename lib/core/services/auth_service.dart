@@ -15,8 +15,27 @@ class AuthService {
   // Stream do AppUser atual
   Stream<AppUser?> get currentAppUser {
     return _auth.authStateChanges().asyncMap((user) async {
-      if (user == null) return null;
-      return await getAppUser(user.uid);
+      print('🔍 AUTH: authStateChanges - user: ${user?.uid}');
+      if (user == null) {
+        print('🔍 AUTH: user is null, returning null');
+        return null;
+      }
+      
+      print('🔍 AUTH: Getting AppUser for uid: ${user.uid}');
+      final appUser = await getAppUser(user.uid);
+      print('🔍 AUTH: AppUser found: ${appUser?.email}, unitIds: ${appUser?.unitIds}');
+      
+      // Verificar se o usuário precisa ser vinculado às unidades
+      if (appUser != null && (appUser.unitIds.isEmpty && !appUser.isGlobalAdmin)) {
+        print('🔗 Usuário ${appUser.email} sem unidades. Vinculando automaticamente...');
+        await _linkUserToUnits(appUser);
+        // Recarregar dados do usuário após vinculação
+        final updatedUser = await getAppUser(user.uid);
+        print('🔍 AUTH: Updated AppUser: ${updatedUser?.email}, unitIds: ${updatedUser?.unitIds}');
+        return updatedUser;
+      }
+      
+      return appUser;
     });
   }
 
@@ -50,6 +69,9 @@ class AuthService {
     required UserRole role,
     String? department,
     String? phone,
+    List<String>? unitIds,
+    String? currentUnitId,
+    bool isGlobalAdmin = false,
   }) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
@@ -66,6 +88,9 @@ class AuthService {
           role: role,
           department: department,
           phone: phone,
+          unitIds: unitIds,
+          currentUnitId: currentUnitId,
+          isGlobalAdmin: isGlobalAdmin,
         );
 
         // Atualizar display name
@@ -143,6 +168,59 @@ class AuthService {
     }
   }
 
+  // Atualizar unidade atual do usuário
+  Future<void> updateUserCurrentUnit(String uid, String unitId) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'currentUnitId': unitId,
+      });
+    } catch (e) {
+      throw Exception('Erro ao atualizar unidade atual: $e');
+    }
+  }
+
+  // Adicionar unidade ao usuário
+  Future<void> addUserUnit(String uid, String unitId) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'unitIds': FieldValue.arrayUnion([unitId]),
+      });
+    } catch (e) {
+      throw Exception('Erro ao adicionar unidade ao usuário: $e');
+    }
+  }
+
+  // Remover unidade do usuário
+  Future<void> removeUserUnit(String uid, String unitId) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'unitIds': FieldValue.arrayRemove([unitId]),
+      });
+    } catch (e) {
+      throw Exception('Erro ao remover unidade do usuário: $e');
+    }
+  }
+
+  // Definir usuário como admin global
+  Future<void> setGlobalAdmin(String uid, bool isGlobalAdmin) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'isGlobalAdmin': isGlobalAdmin,
+      });
+    } catch (e) {
+      throw Exception('Erro ao definir admin global: $e');
+    }
+  }
+
+  // Atualizar perfil com dados específicos
+  Future<void> updateUserProfileData(String uid, Map<String, dynamic> data) async {
+    try {
+      await _firestore.collection('users').doc(uid).update(data);
+    } catch (e) {
+      throw Exception('Erro ao atualizar dados do usuário: $e');
+    }
+  }
+
   // Reset de senha
   Future<void> resetPassword(String email) async {
     try {
@@ -160,6 +238,9 @@ class AuthService {
     required UserRole role,
     String? department,
     String? phone,
+    List<String>? unitIds,
+    String? currentUnitId,
+    bool isGlobalAdmin = false,
   }) async {
     final user = AppUser(
       id: uid,
@@ -169,6 +250,9 @@ class AuthService {
       department: department,
       phone: phone,
       createdAt: DateTime.now(),
+      unitIds: unitIds ?? [],
+      currentUnitId: currentUnitId,
+      isGlobalAdmin: isGlobalAdmin,
     );
 
     await _firestore.collection('users').doc(uid).set(user.toFirestore());
@@ -210,6 +294,37 @@ class AuthService {
       return snapshot.docs.isEmpty;
     } catch (e) {
       return false;
+    }
+  }
+
+  // Vincular usuário às unidades disponíveis
+  Future<void> _linkUserToUnits(AppUser user) async {
+    try {
+      print('🔍 Buscando unidades disponíveis para vincular ao usuário ${user.email}...');
+      
+      // Buscar todas as unidades disponíveis
+      final unitsSnapshot = await _firestore.collection('fire_units').get();
+      
+      if (unitsSnapshot.docs.isEmpty) {
+        print('⚠️ Nenhuma unidade encontrada no sistema');
+        return;
+      }
+      
+      final unitIds = unitsSnapshot.docs.map((doc) => doc.id).toList();
+      print('📋 Encontradas ${unitIds.length} unidades: $unitIds');
+      
+      // Atualizar usuário com as unidades
+      final updates = {
+        'unitIds': unitIds,
+        'currentUnitId': unitIds.isNotEmpty ? unitIds.first : null,
+        'isGlobalAdmin': user.role.value == 'admin',
+      };
+      
+      await _firestore.collection('users').doc(user.id).update(updates);
+      print('✅ Usuário ${user.email} vinculado a ${unitIds.length} unidades!');
+      
+    } catch (e) {
+      print('❌ Erro ao vincular usuário às unidades: $e');
     }
   }
 }

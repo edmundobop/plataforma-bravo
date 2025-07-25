@@ -29,6 +29,10 @@ class AppUser {
   final DateTime createdAt;
   final DateTime? lastLoginAt;
   final String? profileImageUrl;
+  // Multi-tenant fields
+  final String? currentUnitId; // Unidade atualmente selecionada
+  final List<String> unitIds; // Lista de unidades que o usuário tem acesso
+  final bool isGlobalAdmin; // Admin global (acesso a todas as unidades)
 
   const AppUser({
     required this.id,
@@ -41,10 +45,13 @@ class AppUser {
     required this.createdAt,
     this.lastLoginAt,
     this.profileImageUrl,
+    this.currentUnitId,
+    this.unitIds = const [],
+    this.isGlobalAdmin = false,
   });
 
-  // Permissões baseadas no role
-  bool get canManageUsers => role == UserRole.admin;
+  // Permissões baseadas no role e multi-tenancy
+  bool get canManageUsers => isGlobalAdmin || role == UserRole.admin;
   bool get canCreateProducts => role == UserRole.admin || role == UserRole.user;
   bool get canEditProducts => role == UserRole.admin || role == UserRole.user;
   bool get canDeleteProducts => role == UserRole.admin;
@@ -52,6 +59,13 @@ class AppUser {
   bool get canApproveMovements => role == UserRole.admin || role == UserRole.supervisor;
   bool get canViewReports => true; // Todos podem ver relatórios
   bool get canExportData => role == UserRole.admin || role == UserRole.supervisor;
+  bool get canSwitchUnits => unitIds.length > 1 || isGlobalAdmin;
+  bool get hasUnitAccess => currentUnitId != null || isGlobalAdmin;
+  
+  // Verificar se tem acesso a uma unidade específica
+  bool hasAccessToUnit(String unitId) {
+    return isGlobalAdmin || unitIds.contains(unitId);
+  }
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -66,6 +80,9 @@ class AppUser {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
       profileImageUrl: data['profileImageUrl'],
+      currentUnitId: data['currentUnitId'],
+      unitIds: List<String>.from(data['unitIds'] ?? []),
+      isGlobalAdmin: data['isGlobalAdmin'] ?? false,
     );
   }
 
@@ -80,6 +97,9 @@ class AppUser {
       'createdAt': Timestamp.fromDate(createdAt),
       'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
       'profileImageUrl': profileImageUrl,
+      'currentUnitId': currentUnitId,
+      'unitIds': unitIds,
+      'isGlobalAdmin': isGlobalAdmin,
     };
   }
 
@@ -94,6 +114,9 @@ class AppUser {
     DateTime? createdAt,
     DateTime? lastLoginAt,
     String? profileImageUrl,
+    String? currentUnitId,
+    List<String>? unitIds,
+    bool? isGlobalAdmin,
   }) {
     return AppUser(
       id: id ?? this.id,
@@ -106,6 +129,9 @@ class AppUser {
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      currentUnitId: currentUnitId ?? this.currentUnitId,
+      unitIds: unitIds ?? this.unitIds,
+      isGlobalAdmin: isGlobalAdmin ?? this.isGlobalAdmin,
     );
   }
 }

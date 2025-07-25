@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/auth_providers.dart';
+import '../../../core/providers/fire_unit_providers.dart';
 import '../../../core/models/user.dart';
+import '../../../core/models/fire_unit.dart';
 
 import 'package:go_router/go_router.dart';
 
@@ -398,72 +400,167 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final departmentController = TextEditingController();
     final phoneController = TextEditingController();
     UserRole selectedRole = UserRole.user;
+    List<String> selectedUnitIds = [];
+    bool isGlobalAdmin = false;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Adicionar Usuário'),
-        content: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nome'),
-                  validator: (value) =>
-                      value?.isEmpty == true ? 'Campo obrigatório' : null,
-                ),
-                TextFormField(
-                  controller: emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value?.isEmpty == true) return 'Campo obrigatório';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                        .hasMatch(value!)) {
-                      return 'Email inválido';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: passwordController,
-                  decoration: const InputDecoration(labelText: 'Senha'),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value?.isEmpty == true) return 'Campo obrigatório';
-                    if (value!.length < 6) return 'Mínimo 6 caracteres';
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: departmentController,
-                  decoration: const InputDecoration(
-                      labelText: 'Departamento (opcional)'),
-                ),
-                TextFormField(
-                  controller: phoneController,
-                  decoration:
-                      const InputDecoration(labelText: 'Telefone (opcional)'),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<UserRole>(
-                  value: selectedRole,
-                  decoration: const InputDecoration(labelText: 'Função'),
-                  items: UserRole.values.map((role) {
-                    return DropdownMenuItem(
-                      value: role,
-                      child: Text(role.displayName),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) selectedRole = value;
-                  },
-                ),
-              ],
+        content: SizedBox(
+          width: 500,
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Nome'),
+                        validator: (value) =>
+                            value?.isEmpty == true ? 'Campo obrigatório' : null,
+                      ),
+                      TextFormField(
+                        controller: emailController,
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value?.isEmpty == true) return 'Campo obrigatório';
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                              .hasMatch(value!)) {
+                            return 'Email inválido';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: passwordController,
+                        decoration: const InputDecoration(labelText: 'Senha'),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value?.isEmpty == true) return 'Campo obrigatório';
+                          if (value!.length < 6) return 'Mínimo 6 caracteres';
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: departmentController,
+                        decoration: const InputDecoration(
+                            labelText: 'Departamento (opcional)'),
+                      ),
+                      TextFormField(
+                        controller: phoneController,
+                        decoration:
+                            const InputDecoration(labelText: 'Telefone (opcional)'),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<UserRole>(
+                        value: selectedRole,
+                        decoration: const InputDecoration(labelText: 'Função'),
+                        items: UserRole.values.map((role) {
+                          return DropdownMenuItem(
+                            value: role,
+                            child: Text(role.displayName),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              selectedRole = value;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // Checkbox para Admin Global
+                      CheckboxListTile(
+                        title: const Text('Administrador Global'),
+                        subtitle: const Text('Acesso a todas as unidades'),
+                        value: isGlobalAdmin,
+                        onChanged: (value) {
+                          setState(() {
+                            isGlobalAdmin = value ?? false;
+                            if (isGlobalAdmin) {
+                              selectedUnitIds.clear();
+                            }
+                          });
+                        },
+                      ),
+                      // Seleção de Unidades (apenas se não for admin global)
+                       if (!isGlobalAdmin) ...[
+                         const SizedBox(height: 16),
+                        const Text(
+                          'Unidades de Acesso:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final unitsAsync = ref.watch(fireUnitsProvider);
+                            return unitsAsync.when(
+                              data: (units) {
+                                if (units.isEmpty) {
+                                  return const Text(
+                                    'Nenhuma unidade disponível',
+                                    style: TextStyle(color: Colors.grey),
+                                  );
+                                }
+                                return Container(
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: ListView.builder(
+                                    itemCount: units.length,
+                                    itemBuilder: (context, index) {
+                                      final unit = units[index];
+                                      return CheckboxListTile(
+                                        title: Text(unit.name),
+                                        subtitle: Text('${unit.code} - ${unit.city}'),
+                                        value: selectedUnitIds.contains(unit.id),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            if (value == true) {
+                                              selectedUnitIds.add(unit.id);
+                                            } else {
+                                              selectedUnitIds.remove(unit.id);
+                                            }
+                                          });
+                                        },
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                              loading: () => const CircularProgressIndicator(),
+                              error: (error, stack) => Text(
+                                'Erro ao carregar unidades: $error',
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            );
+                          },
+                        ),
+                        if (!isGlobalAdmin && selectedUnitIds.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: Text(
+                              'Selecione pelo menos uma unidade',
+                              style: TextStyle(color: Colors.red, fontSize: 12),
+                            ),
+                          ),
+                      ],
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -475,31 +572,50 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           ElevatedButton(
             onPressed: () async {
               if (formKey.currentState!.validate()) {
-                Navigator.of(context).pop();
-
-                final authNotifier = ref.read(authNotifierProvider.notifier);
-                await authNotifier.register(
-                  email: emailController.text.trim(),
-                  password: passwordController.text,
-                  name: nameController.text.trim(),
-                  role: selectedRole,
-                  department: departmentController.text.trim().isEmpty
-                      ? null
-                      : departmentController.text.trim(),
-                  phone: phoneController.text.trim().isEmpty
-                      ? null
-                      : phoneController.text.trim(),
-                );
-
-                ref.refresh(usersListProvider);
-
-                if (mounted) {
+                // Validação adicional para unidades
+                if (!isGlobalAdmin && selectedUnitIds.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Usuário criado com sucesso!'),
-                      backgroundColor: Colors.green,
+                      content: Text('Selecione pelo menos uma unidade ou marque como Administrador Global'),
+                      backgroundColor: Colors.orange,
                     ),
                   );
+                  return;
+                }
+                
+                try {
+                  await ref.read(userManagementProvider.notifier).createUser(
+                    email: emailController.text,
+                    password: passwordController.text,
+                    name: nameController.text,
+                    role: selectedRole,
+                    department: departmentController.text.isEmpty
+                        ? null
+                        : departmentController.text,
+                    phone: phoneController.text.isEmpty
+                        ? null
+                        : phoneController.text,
+                    unitIds: isGlobalAdmin ? [] : selectedUnitIds,
+                    isGlobalAdmin: isGlobalAdmin,
+                  );
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Usuário criado com sucesso'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erro ao criar usuário: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 }
               }
             },

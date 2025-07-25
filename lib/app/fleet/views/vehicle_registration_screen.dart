@@ -68,7 +68,13 @@ class _VehicleRegistrationScreenState
 
     try {
       final vehicleService = ref.read(vehicleServiceProvider);
+      final currentUnitId = ref.read(currentUnitIdProvider);
       final now = DateTime.now();
+
+      // Verificar se uma unidade está selecionada
+      if (currentUnitId == null) {
+        throw Exception('Nenhuma unidade selecionada');
+      }
 
       final vehicle = Vehicle(
         id: widget.vehicle?.id,
@@ -83,6 +89,7 @@ class _VehicleRegistrationScreenState
             : _observationController.text.trim(),
         createdAt: widget.vehicle?.createdAt ?? now,
         updatedAt: now,
+        unitId: currentUnitId,
       );
 
       if (widget.vehicle == null) {

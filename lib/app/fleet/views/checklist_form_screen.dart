@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/models/checklist.dart';
 import '../../../../core/models/vehicle.dart';
 import '../../../../core/providers/providers.dart';
+import '../../../../core/providers/fire_unit_providers.dart';
 
 class ChecklistFormScreen extends ConsumerStatefulWidget {
   final String vehicleId;
@@ -66,9 +67,15 @@ class _ChecklistFormScreenState extends ConsumerState<ChecklistFormScreen> {
         overallStatus = ChecklistStatus.failed;
       }
 
+      final currentUnitId = ref.read(currentUnitIdProvider);
+      if (currentUnitId == null) {
+        throw Exception('Unidade não selecionada.');
+      }
+
       final checklist = Checklist(
         vehicleId: widget.vehicleId,
         userId: currentUser.id,
+        unitId: currentUnitId,
         checklistDate: DateTime.now(),
         status: overallStatus,
         generalObservations: _generalObservationController.text.trim().isEmpty

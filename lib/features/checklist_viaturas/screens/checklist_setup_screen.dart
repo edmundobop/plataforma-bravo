@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/vehicle.dart';
+import '../../../core/providers/fire_unit_providers.dart';
 import '../models/vehicle_checklist.dart';
 import '../utils/app_colors.dart';
 import '../utils/checklist_data.dart';
@@ -48,6 +49,18 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
   }
 
   void _startChecklist() {
+    final currentUnitId = ref.read(currentUnitIdProvider);
+    
+    if (currentUnitId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro: Unidade atual não encontrada'),
+          backgroundColor: AppColors.errorRed,
+        ),
+      );
+      return;
+    }
+
     // Criar as categorias baseadas no tipo de veículo
     final categories = ChecklistData.getCategoriesForVehicleType(
         _getVehicleTypeDisplayName(widget.vehicle.type));
@@ -55,6 +68,7 @@ class _ChecklistSetupScreenState extends ConsumerState<ChecklistSetupScreen> {
     // Criar o checklist
     final checklist = VehicleChecklist(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
+      unitId: currentUnitId,
       vehicleId: widget.vehicle.id ?? '',
       vehicleType: _getVehicleTypeDisplayName(widget.vehicle.type),
       vehiclePlate: widget.vehicle.licensePlate,
