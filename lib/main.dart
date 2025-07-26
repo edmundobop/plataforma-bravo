@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'core/navigation/app_router.dart';
+import 'core/utils/add_test_units.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,9 @@ void main() async {
 
   // Configurar Firestore (apenas uma vez, antes de qualquer outra operação Firestore)
   FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
+  
+  // Adicionar unidades de teste se necessário
+  await AddTestUnits.addUnitsIfNeeded();
   
   runApp(
     const ProviderScope(

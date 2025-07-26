@@ -15,6 +15,7 @@ class ProductRegistrationScreen extends ConsumerStatefulWidget {
 
 class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _minStockController = TextEditingController();
@@ -42,6 +43,55 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
     super.initState();
     if (widget.product != null) {
       _populateFields();
+    }
+  }
+
+  void _showSuccessAndNavigate(String message) {
+    // Usar o ScaffoldMessenger global para evitar problemas de contexto
+    _scaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(message),
+          ],
+        ),
+        backgroundColor: const Color(0xFF388E3C),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    
+    // Aguardar um pouco para que o SnackBar seja visível antes de navegar
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        context.go('/stock/products');
+      }
+    });
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      _scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
     }
   }
 
@@ -114,70 +164,19 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
       if (widget.product == null) {
         // Criar novo produto
         await productService.createProduct(product);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('Produto cadastrado com sucesso!'),
-                ],
-              ),
-              backgroundColor: const Color(0xFF388E3C),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          );
-        }
+        
+        // Mostrar SnackBar de sucesso e navegar
+        _showSuccessAndNavigate('Produto cadastrado com sucesso!');
       } else {
         // Atualizar produto existente
         final updatedProduct = product.copyWith(id: widget.product!.id);
         await productService.updateProduct(updatedProduct);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('Produto atualizado com sucesso!'),
-                ],
-              ),
-              backgroundColor: const Color(0xFF388E3C),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          );
-        }
-      }
-
-      if (mounted) {
-        context.pop();
+        
+        // Mostrar SnackBar de sucesso e navegar
+        _showSuccessAndNavigate('Produto atualizado com sucesso!');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Erro ao salvar produto: $e')),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
-      }
+      _showErrorSnackBar('Erro ao salvar produto: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -192,7 +191,9 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
     final isEditing = widget.product != null;
     final categories = ref.watch(categoriesProvider);
 
-    return Scaffold(
+    return ScaffoldMessenger(
+      key: _scaffoldMessengerKey,
+      child: Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(
@@ -724,52 +725,46 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Visibility(
-                    visible: ref.watch(isAdminProvider),
-                    maintainSize: false,
-                    maintainAnimation: false,
-                    maintainState: false,
-                    child: Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFD32F2F), Color(0xFFB71C1C)],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.red.withOpacity(0.3),
-                              spreadRadius: 1,
-                              blurRadius: 6,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFD32F2F), Color(0xFFB71C1C)],
                         ),
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submitProduct,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.3),
+                            spreadRadius: 1,
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
-                              : Text(
-                                  isEditing ? 'Atualizar Produto' : 'Cadastrar Produto',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submitProduct,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                 ),
-                        ),
+                              )
+                            : Text(
+                                isEditing ? 'Atualizar Produto' : 'Cadastrar Produto',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -778,6 +773,7 @@ class _ProductRegistrationScreenState extends ConsumerState<ProductRegistrationS
             ],
           ),
         ),
+      ),
       ),
     );
   }

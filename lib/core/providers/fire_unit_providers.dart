@@ -39,8 +39,8 @@ final userUnitsProvider = FutureProvider<List<FireUnit>>((ref) async {
       if (user.isGlobalAdmin) {
         try {
           print('🔍 userUnitsProvider - Usuário é admin global, buscando todas as unidades...');
-          // Para admin global, sempre buscar diretamente do serviço para evitar cache
-          final allUnits = await FireUnitService.getActiveUnits().first;
+          // Para admin global, usar o fireUnitsProvider que já está configurado
+          final allUnits = await ref.read(fireUnitsProvider.future);
           print('🌐 userUnitsProvider: Admin global - ${allUnits.length} unidades encontradas');
           for (var unit in allUnits) {
             print('📋 userUnitsProvider: Unidade: ${unit.code} - ${unit.name}');

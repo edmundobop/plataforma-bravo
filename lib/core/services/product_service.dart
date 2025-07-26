@@ -89,6 +89,21 @@ class ProductService {
   // Buscar categorias (filtrado por unidade)
   Future<List<String>> getCategories({String? unitId}) async {
     try {
+      // Sempre começar com as categorias padrão
+      final categories = <String>{
+        'Material de Escritório',
+        'Equipamentos de Proteção',
+        'Ferramentas',
+        'Material de Limpeza',
+        'Equipamentos Eletrônicos',
+        'Material Médico',
+        'Combustível',
+        'Peças e Componentes',
+        'Material de Construção',
+        'Outros',
+      };
+      
+      // Buscar categorias dos produtos existentes para adicionar às padrão
       Query query = _firestore.collection(_collection);
       
       // Filtrar por unidade se especificado
@@ -97,29 +112,12 @@ class ProductService {
       }
       
       final snapshot = await query.get();
-      final categories = <String>{};
       
       for (final doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
         if (data['category'] != null) {
           categories.add(data['category'] as String);
         }
-      }
-      
-      // Se não há categorias dos produtos existentes, adicionar categorias padrão
-      if (categories.isEmpty) {
-        categories.addAll([
-          'Material de Escritório',
-          'Equipamentos de Proteção',
-          'Ferramentas',
-          'Material de Limpeza',
-          'Equipamentos Eletrônicos',
-          'Material Médico',
-          'Combustível',
-          'Peças e Componentes',
-          'Material de Construção',
-          'Outros',
-        ]);
       }
       
       return categories.toList()..sort();

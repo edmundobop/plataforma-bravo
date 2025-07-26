@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/providers/fire_unit_providers.dart';
 import '../../../core/widgets/unit_selector.dart';
+import '../../../core/widgets/notification_icon.dart';
 import '../../../features/checklist_viaturas/utils/app_colors.dart';
 import '../widgets/welcome_widget.dart';
 
@@ -79,6 +80,9 @@ class HomeScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
+                        // Ícone de notificações
+                        const NotificationDropdown(),
+                        const SizedBox(width: 8),
                         // Menu do usuário
                         PopupMenuButton<String>(
                           icon: Container(

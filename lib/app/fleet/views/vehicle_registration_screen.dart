@@ -17,6 +17,7 @@ class VehicleRegistrationScreen extends ConsumerStatefulWidget {
 class _VehicleRegistrationScreenState
     extends ConsumerState<VehicleRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
   final _nameController = TextEditingController();
   final _licensePlateController = TextEditingController();
   final _modelController = TextEditingController();
@@ -57,6 +58,55 @@ class _VehicleRegistrationScreenState
     super.dispose();
   }
 
+  void _showSuccessAndNavigate(String message) {
+    // Usar o ScaffoldMessenger global para evitar problemas de contexto
+    _scaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(message),
+          ],
+        ),
+        backgroundColor: const Color(0xFF388E3C),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    
+    // Aguardar um pouco para que o SnackBar seja visível antes de navegar
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        context.go('/fleet');
+      }
+    });
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      _scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _submitVehicle() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -95,39 +145,18 @@ class _VehicleRegistrationScreenState
       if (widget.vehicle == null) {
         // Create new vehicle
         await vehicleService.createVehicle(vehicle);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Viatura cadastrada com sucesso!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+        
+        // Mostrar SnackBar de sucesso e navegar
+        _showSuccessAndNavigate('Viatura cadastrada com sucesso!');
       } else {
         // Update existing vehicle
         await vehicleService.updateVehicle(vehicle);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Viatura atualizada com sucesso!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      }
-
-      if (mounted) {
-        context.pop();
+        
+        // Mostrar SnackBar de sucesso e navegar
+        _showSuccessAndNavigate('Viatura atualizada com sucesso!');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar viatura: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showErrorSnackBar('Erro ao salvar viatura: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -141,7 +170,9 @@ class _VehicleRegistrationScreenState
   Widget build(BuildContext context) {
     final isEditing = widget.vehicle != null;
 
-    return Scaffold(
+    return ScaffoldMessenger(
+      key: _scaffoldMessengerKey,
+      child: Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -351,6 +382,7 @@ class _VehicleRegistrationScreenState
             ],
           ),
         ),
+      ),
       ),
     );
   }

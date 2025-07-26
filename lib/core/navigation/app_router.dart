@@ -14,6 +14,7 @@ import '../../app/stock/consumables/views/stock_movement_screen.dart';
 import '../../app/fleet/views/vehicle_registration_screen.dart';
 import '../../app/fleet/views/checklist_form_screen.dart';
 import '../../app/fleet/views/checklist_details_screen.dart';
+import '../../app/notifications/views/notifications_screen.dart';
 import '../../core/models/product.dart';
 import '../../core/models/vehicle.dart';
 import '../providers/auth_providers.dart';
@@ -116,6 +117,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/users',
         builder: (context, state) => const UserManagementScreen(),
       ),
+
+      // Rota de notificações
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
     ],
   );
 });
@@ -205,6 +212,12 @@ class AppRouter extends ConsumerWidget {
       GoRoute(
         path: '/users',
         builder: (context, state) => const UserManagementScreen(),
+      ),
+
+      // Rota de notificações
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
     ],
   );
