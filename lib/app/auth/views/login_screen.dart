@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/models/user.dart';
 import '../../../features/checklist_viaturas/utils/app_colors.dart';
-import '../../../core/widgets/debug_login.dart';
+
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -469,9 +469,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   
-                  // Widget de Debug para facilitar testes
-                  const SizedBox(height: 24),
-                  const DebugLogin(),
+
                 ],
               ),
             ),

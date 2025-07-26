@@ -24,7 +24,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final isLoggedIn = ref.watch(isLoggedInProvider);
 
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/login',
     redirect: (context, state) {
       // Se não estiver logado e não estiver na tela de login
       if (!isLoggedIn && state.matchedLocation != '/login') {
@@ -127,7 +127,7 @@ class AppRouter extends ConsumerWidget {
   static GoRouter get router => _router;
   
   static final GoRouter _router = GoRouter(
-    initialLocation: '/',
+    initialLocation: '/login',
     routes: [
       // Rota de login
       GoRoute(

@@ -38,8 +38,9 @@ class UnitSelector extends ConsumerWidget {
               : _buildFullNoUnits(context, ref, showLabel);
         }
 
-        // Sempre permitir seleção se há múltiplas unidades
-        bool allowSelection = units.length > 1;
+        // Permitir seleção se há múltiplas unidades OU se o usuário pode trocar de unidades
+        final canSwitch = ref.watch(canSwitchUnitsProvider);
+        bool allowSelection = units.length > 1 || canSwitch;
         
         if (compact) {
           return _buildCompactSelector(context, ref, currentUnit, units, unitSelectionAsync, allowSelection);

@@ -10,11 +10,17 @@ class FireUnitService {
     return _firestore
         .collection(_collection)
         .where('isActive', isEqualTo: true)
-        .orderBy('name')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => FireUnit.fromFirestore(doc))
-            .toList());
+        .map((snapshot) {
+          final units = snapshot.docs
+              .map((doc) => FireUnit.fromFirestore(doc))
+              .toList();
+          
+          // Ordenar por nome no código para evitar necessidade de índice
+          units.sort((a, b) => a.name.compareTo(b.name));
+          
+          return units;
+        });
   }
 
   // Obter unidade por ID
@@ -109,11 +115,15 @@ class FireUnitService {
         .collection(_collection)
         .where('city', isEqualTo: city)
         .where('isActive', isEqualTo: true)
-        .orderBy('name')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => FireUnit.fromFirestore(doc))
-            .toList());
+        .map((snapshot) {
+          final units = snapshot.docs
+              .map((doc) => FireUnit.fromFirestore(doc))
+              .toList();
+          // Ordenar por nome no código para evitar necessidade de índice
+          units.sort((a, b) => a.name.compareTo(b.name));
+          return units;
+        });
   }
 
   // Buscar unidades por código
@@ -122,12 +132,15 @@ class FireUnitService {
       final snapshot = await _firestore
           .collection(_collection)
           .where('code', isEqualTo: code)
-          .where('isActive', isEqualTo: true)
           .limit(1)
           .get();
       
       if (snapshot.docs.isNotEmpty) {
-        return FireUnit.fromFirestore(snapshot.docs.first);
+        final unit = FireUnit.fromFirestore(snapshot.docs.first);
+        // Verificar se a unidade está ativa
+        if (unit.isActive) {
+          return unit;
+        }
       }
       return null;
     } catch (e) {

@@ -8,31 +8,20 @@ service cloud.firestore {
 
     // Products collection rules
     match /products/{productId} {
-      // Only admins can create, update, or delete products
-      allow create, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-      // All authenticated users can read products
-      allow read: if request.auth != null;
+      // All authenticated users can read and write products
+      allow read, write: if request.auth != null;
     }
 
     // Vehicles collection rules
     match /vehicles/{vehicleId} {
-      // Only admins can create, update, or delete vehicles
-      allow create, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-      // All authenticated users can read vehicles
-      allow read: if request.auth != null;
+      // All authenticated users can read and write vehicles
+      allow read, write: if request.auth != null;
     }
 
     // Stock movements collection rules
     match /stock_movements/{movementId} {
-      // All authenticated users can create stock movements
-      allow create: if request.auth != null;
-
-      // Non-admin users can only create 'exit' movements
-      allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role != 'admin' && request.resource.data.type == 'exit';
-
-      // Admins can create any type of movement
-      allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-
+      // All authenticated users can create and read stock movements
+      allow read, create: if request.auth != null;
       // No one can update or delete stock movements (for audit trail)
       allow update, delete: if false;
     }
@@ -63,10 +52,12 @@ service cloud.firestore {
     match /users/{userId} {
       // Users can read their own data
       allow read: if request.auth != null && request.auth.uid == userId;
-      // Admins can read all user data
-      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-      // Admins can create, update, and delete user data
-      allow create, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Allow reading user data for authenticated users (needed for role checks)
+      allow read: if request.auth != null;
+      // Allow creating user profiles during registration
+      allow create: if request.auth != null;
+      // Allow updating user profiles
+      allow update: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
